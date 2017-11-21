@@ -109,6 +109,15 @@ class problem:
         """ Solve a relaxation of the problem using the specific solver. """
         if solver is None:
             solver = solvers.get_default_solver()
+        ncols = len(self.variables) + 1
+        self.__obj._u = np.concatenate(
+           (self.__obj._u, np.zeros(max(0, ncols - len(self.__obj._u)))))
+        for cn in self.__cons:
+            cn.lhs._u = np.concatenate(
+                (cn.lhs._u, np.zeros(max(0, ncols - len(cn.lhs._u)))))
+        for vs in self.__vars:
+            vs._u = np.concatenate(
+                (vs._u, np.zeros(max(0, ncols - len(vs._u)))))
         return solver.solve(self)
 
     def __str__(self):

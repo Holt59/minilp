@@ -22,14 +22,16 @@ class result:
         value = self.__vs[var._idx - 1]
         return value
 
-    def get_values(self, vs):
+    def get_values(self, *args):
         """ Return values associated to the given variables.
 
         Parameters:
           - vs Iterable of minilp.var.
 
         Return: List of value associated with the variables. """
-        return [self.get_value(v) for v in vs]
+        if len(args) == 1:
+            args = args[0]
+        return [self.get_value(v) for v in args]
 
     def __repr__(self):
         return 'status = {}, obj. = {}'.format(self.status, self.objective)
