@@ -16,7 +16,7 @@ class result:
         """ Retrieve the value associated to the given variable.
 
         Parameters:
-          - var A minilp.var object.
+          - var A minilp.expr.var object.
 
         Return: Value associated with the given variable. """
         value = self.__vs[var._idx - 1]
@@ -26,7 +26,7 @@ class result:
         """ Return values associated to the given variables.
 
         Parameters:
-          - vs Iterable of minilp.var.
+          - vs Iterable of minilp.expr.var.
 
         Return: List of value associated with the variables. """
         if len(args) == 1:

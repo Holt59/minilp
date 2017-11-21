@@ -107,6 +107,7 @@ class var(expr):
 
     @property
     def category(self):
+        """ Category of the variable (either int or float). """
         return self.__cat
 
     def __repr__(self):
@@ -160,14 +161,18 @@ class cons:
 
     @property
     def lhs(self):
+        """ Left hand side of the constraint, which is a minilp.expr.expr. """
         return self._e
 
     @property
     def rhs(self):
+        """ Right hand side of the constraint, which is a numeric value. """
         return self._r
 
     @property
     def oper(self):
+        """ Comparison operator of the constraint (either operator.ge or
+        operator.eq). """
         return self._c
 
     def __repr__(self):
