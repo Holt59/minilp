@@ -258,6 +258,6 @@ def get_default_solver():
             s = solver()  # try to construct a solver
         except:
             pass
-        finally:
+        else:
             return s
     return pysimplex()
