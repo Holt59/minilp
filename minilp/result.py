@@ -7,9 +7,9 @@ class result:
 
     def __init__(self, success=False, status='unknown',
                  objective=np.nan, variables=None):
-        self.success = success
-        self.status = status
-        self.objective = objective
+        self.__success = success
+        self.__status = status
+        self.__objective = objective
         self.__vs = variables
 
     def get_value(self, var):
@@ -32,6 +32,21 @@ class result:
         if len(args) == 1:
             args = args[0]
         return [self.get_value(v) for v in args]
+
+    @property
+    def success(self):
+        """ True if this result contains a solution, false otherwize. """
+        return self.__success
+
+    @property
+    def status(self):
+        """ Status of this result. """
+        return self.__status
+
+    @property
+    def objective(self):
+        """ Objective value of this result or np.nan. """
+        return self.__objective
 
     def __repr__(self):
         return 'status = {}, obj. = {}'.format(self.status, self.objective)
