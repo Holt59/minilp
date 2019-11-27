@@ -87,7 +87,7 @@ class pysimplex:
             nse += 2
 
         # convert max -> min
-        if pb.sense == max:
+        if pb.sense == 'max':
             mul = -1
         else:
             mul = 1
@@ -154,7 +154,7 @@ class scipy:
     def solve(self, problem):
 
         obj = problem.objective._u[1:].copy()
-        if problem.sense == max:
+        if problem.sense == 'max':
             obj *= -1
         kargs = {
             'c': obj,
@@ -181,17 +181,12 @@ class scipy:
             })
         kargs['method'] = self.method
         res = self.__linprog(**kargs)
-        if res.success and problem.sense == max:
+        if res.success and problem.sense == 'max':
             res.fun *= -1
         return result(res.success, scipy.status[res.status], res.fun, res.x)
 
 
 class docplex:
-
-    sense = {
-        min: 'min',
-        max: 'max'
-    }
 
     def __init__(self):
         from docplex.mp.model import Model
@@ -219,7 +214,7 @@ class docplex:
         # objective
         obj = problem.objective._u[0]
         obj += sum(c * v for c, v in zip(problem.objective._u[1:], v))
-        m.set_objective(self.sense[problem.sense], obj)
+        m.set_objective(problem.sense, obj)
 
         # constraints
         for cn in problem.constraints:

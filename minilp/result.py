@@ -45,7 +45,7 @@ class result:
 
     @property
     def objective(self):
-        """ Objective value of this result or np.nan. """
+        """ Objective value of this result or nan. """
         return self.__objective
 
     def __repr__(self):
