@@ -22,18 +22,18 @@ minilp.modeler module
    :undoc-members:
    :show-inheritance:
 
-minilp.problem module
----------------------
+minilp.problems module
+----------------------
 
-.. automodule:: minilp.problem
+.. automodule:: minilp.problems
    :members:
    :undoc-members:
    :show-inheritance:
 
-minilp.result module
---------------------
+minilp.results module
+---------------------
 
-.. automodule:: minilp.result
+.. automodule:: minilp.results
    :members:
    :undoc-members:
    :show-inheritance:
