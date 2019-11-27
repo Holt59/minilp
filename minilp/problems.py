@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-import collections
+import collections.abc
 import typing
 import numpy as np
 
@@ -74,9 +74,9 @@ class problem(minilp.modeler.modeler):
             A dictionary of variables of the given category with the given parameters..
         """
         keys = tuple(keys)
-        if not isinstance(lb, collections.Iterable):
+        if not isinstance(lb, collections.abc.Iterable):
             lb = [lb] * len(keys)
-        if not isinstance(ub, collections.Iterable):
+        if not isinstance(ub, collections.abc.Iterable):
             ub = [ub] * len(keys)
         return {k: self._var(l, u, cat, '{}{}'.format(prefix, k))
                 for l, u, k in zip(lb, ub, keys)}
@@ -107,16 +107,16 @@ class problem(minilp.modeler.modeler):
         Returns:
             A dictionary of variables of the given category with the given parameters..
         """
-        if not isinstance(n_or_names, collections.Iterable):
+        if not isinstance(n_or_names, collections.abc.Iterable):
             if prefix is None:
                 n_or_names = [None] * n_or_names
             else:
                 n_or_names = map(str, range(n_or_names))
         if prefix is not None:
             n_or_names = ['{}{}'.format(prefix, c) for c in n_or_names]
-        if not isinstance(lb, collections.Iterable):
+        if not isinstance(lb, collections.abc.Iterable):
             lb = [lb] * len(n_or_names)
-        if not isinstance(ub, collections.Iterable):
+        if not isinstance(ub, collections.abc.Iterable):
             ub = [ub] * len(n_or_names)
         return [self._var(l, u, cat, n)
                 for l, u, n in zip(lb, ub, n_or_names)]

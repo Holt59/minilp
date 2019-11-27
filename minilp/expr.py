@@ -6,7 +6,7 @@ import typing
 
 from .modeler import modeler
 
-import minilp.problem
+import minilp.problems
 
 
 class oper(enum.Enum):
@@ -29,7 +29,7 @@ class expr:
 
     def __init__(self,
                  arr: typing.Union['expr', np.ndarray, float],
-                 pb: 'minilp.problem.problem'):
+                 pb: 'minilp.problems.problem'):
         """
         Args:
             arr: Array containing, for each variable in the corresponding
@@ -218,7 +218,7 @@ class var(expr):
     """ A variable is a simple linear expression with a coefficient of 1. """
 
     def __init__(self,
-                 pb: 'minilp.problem.problem',
+                 pb: 'minilp.problems.problem',
                  idx: int,
                  lb: float = 0,
                  ub: float = modeler.inf,

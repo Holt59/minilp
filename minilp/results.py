@@ -55,7 +55,8 @@ class result:
         value = self.__vs[variable._idx - 1]
         return value
 
-    def get_values(self, variables: typing.Iterable['minilp.expr.var']) -> typing.List[float]:
+    def get_values(self,
+                   variables: typing.Iterable['minilp.expr.var']) -> typing.List[float]:
         """ Retrieve thes value associated to the given variables.
 
         Args:

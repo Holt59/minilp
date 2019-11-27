@@ -2,9 +2,11 @@
 
 __version__ = '0.0.1'
 
-import minilp.expr
-import minilp.problem
+import minilp.problems
+import minilp.results
 import minilp.solvers
 
-problem = minilp.problem.problem
+problem = minilp.problems.problem
+result = minilp.results.result
+status = minilp.results.status
 solvers = minilp.solvers

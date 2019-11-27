@@ -5,8 +5,8 @@ import numpy as np
 
 from minilp.modeler import modeler
 import minilp.expr
-import minilp.problem
-import minilp.result
+import minilp.problems
+import minilp.results
 
 
 class solver(abc.ABC):
@@ -15,7 +15,7 @@ class solver(abc.ABC):
     integer variables). """
 
     def solve(self,
-              problem: 'minilp.problem.problem') -> 'minilp.result.result':
+              problem: 'minilp.problems.problem') -> 'minilp.results.result':
         """
         Solve the linear relaxation of the given problem.
 
@@ -141,7 +141,7 @@ class pysimplex:
         S, z, x = self.simplex(S)
 
         if z > self.eps:
-            return minilp.result.result(False, 'infeasible')
+            return minilp.results.result(False, 'infeasible')
 
         # phase 2
         basis = self.get_basis(S)
@@ -157,19 +157,19 @@ class pysimplex:
         A, z, x = self.simplex(A)
 
         if x is None:
-            return minilp.result.result(False, 'unbounded', mul * (-np.inf))
+            return minilp.results.result(False, 'unbounded', mul * (-np.inf))
 
-        return minilp.result.result(True, 'optimal', mul * z, x[:len(pb.variables)])
+        return minilp.results.result(True, 'optimal', mul * z, x[:len(pb.variables)])
 
 
 class scipy:
 
     # Mapping between scipy status and minilp status.
     _status = [
-        minilp.result.status.optimal,
-        minilp.result.status.unknown,
-        minilp.result.status.infeasible,
-        minilp.result.status.unbounded
+        minilp.results.status.optimal,
+        minilp.results.status.unknown,
+        minilp.results.status.infeasible,
+        minilp.results.status.unbounded
     ]
 
     def __init__(self):
@@ -212,7 +212,7 @@ class scipy:
         res = self.__linprog(**kargs)
         if res.success and problem.sense == 'max':
             res.fun *= -1
-        return minilp.result.result(res.success, scipy._status[res.status], res.fun, res.x)
+        return minilp.results.result(res.success, scipy._status[res.status], res.fun, res.x)
 
 
 class docplex:
@@ -220,12 +220,12 @@ class docplex:
     def __init__(self):
         from docloud.status import JobSolveStatus
         self.status = {
-            JobSolveStatus.UNKNOWN: minilp.result.status.unknown,
-            JobSolveStatus.FEASIBLE_SOLUTION: minilp.result.status.feasible,
-            JobSolveStatus.OPTIMAL_SOLUTION: minilp.result.status.optimal,
-            JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION: minilp.result.status.unknown,
-            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.result.status.infeasible,
-            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.result.status.unbounded
+            JobSolveStatus.UNKNOWN: minilp.results.status.unknown,
+            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.status.feasible,
+            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.status.optimal,
+            JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION: minilp.results.status.unknown,
+            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.status.infeasible,
+            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.status.unbounded
         }
 
     def solve(self, problem):
@@ -263,9 +263,9 @@ class docplex:
             m.solve()
 
             if not m.solution:
-                return minilp.result.result(False, self.status[m.get_solve_status()],
-                                            np.nan, [None] * len(problem.variables))
-            return minilp.result.result(
+                return minilp.results.result(False, self.status[m.get_solve_status()],
+                                             np.nan, [None] * len(problem.variables))
+            return minilp.results.result(
                 True, self.status[m.get_solve_status()],
                 m.solution.objective_value,
                 m.solution.get_values(v))
