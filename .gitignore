@@ -1,3 +1,9 @@
+# Editor files
 *~
+
+# Python files
 __pycache__
 .ipynb_checkpoints
+
+# Documentation build
+doc/_build
