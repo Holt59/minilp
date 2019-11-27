@@ -1,50 +1,84 @@
 # -*- encoding: utf-8 -*-
 
-import numpy as np
+import enum
+import typing
+
+from minilp.modeler import modeler
+import minilp.expr
+
+
+class status(enum.Enum):
+
+    """ Enumeration class representing the status of a problem
+    solution. """
+
+    unknown = enum.auto()
+    feasible = enum.auto()
+    optimal = enum.auto()
+    infeasible = enum.auto()
+    unbounded = enum.auto()
+
+    def __str__(self):
+        return self.name
 
 
 class result:
 
-    def __init__(self, success=False, status='unknown',
-                 objective=np.nan, variables=None):
+    """ Class representing the solution of a minilp problem. """
+
+    def __init__(self,
+                 success: bool = False,
+                 status: status = status.unknown,
+                 objective: float = modeler.nan,
+                 variables: typing.Optional[typing.Iterable[float]] = None):
+        """
+        Args:
+            success: True if the solution is valid, False otherrwize.
+            status: Status of the solution.
+            objective: Objective value of the solution.
+            variables: Values of the variables in this solution.
+        """
         self.__success = success
         self.__status = status
         self.__objective = objective
         self.__vs = variables
 
-    def get_value(self, var):
+    def get_value(self, variable: 'minilp.expr.var') -> float:
         """ Retrieve the value associated to the given variable.
 
-        Parameters:
-          - var A minilp.expr.var object.
+        Args:
+            variable: The variable to retrieve the value for.
 
-        Return: Value associated with the given variable. """
-        value = self.__vs[var._idx - 1]
+        Returns:
+            The value associated with the given variable in this solution.
+        """
+        value = self.__vs[variable._idx - 1]
         return value
 
-    def get_values(self, *args):
-        """ Return values associated to the given variables.
+    def get_values(self, variables: typing.Iterable['minilp.expr.var']) -> typing.List[float]:
+        """ Retrieve thes value associated to the given variables.
 
-        Parameters:
-          - vs Iterable of minilp.expr.var.
+        Args:
+            variables: The variables to retrieve the value for.
 
-        Return: List of value associated with the variables. """
-        if len(args) == 1:
-            args = args[0]
-        return [self.get_value(v) for v in args]
+        Returns:
+            A list containing the value associated with the given variables
+            in this solution.
+        """
+        return [self.get_value(v) for v in variables]
 
     @property
-    def success(self):
+    def success(self) -> bool:
         """ True if this result contains a solution, false otherwize. """
         return self.__success
 
     @property
-    def status(self):
+    def status(self) -> status:
         """ Status of this result. """
         return self.__status
 
     @property
-    def objective(self):
+    def objective(self) -> float:
         """ Objective value of this result or nan. """
         return self.__objective
 

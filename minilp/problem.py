@@ -1,276 +1,432 @@
 # -*- encoding: utf-8 -*-
 
 import collections
-
-from minilp.expr import cons, expr, var
-from minilp.modeler  import modeler
-import minilp.solvers as solvers
-
+import typing
 import numpy as np
 
+import minilp.expr
+from minilp.modeler import modeler
+import minilp.solvers
 
-class problem(modeler):
 
-    def __init__(self, name=''):
+class problem(minilp.modeler.modeler):
+
+    def __init__(self, name: str = ''):
         """ Create a new problem with the given name and sense for the objective.
 
-        Parameters:
-          - name Name of the problem.
-          - sense Sense of the objective function.
+        Args:
+            name: Name of the problem.
         """
         self.__idx = 1
         self.__vars = []
         self.__cons = []
+        self.__sense = 'min'
         self.__obj = 0
         self.name = name
 
-    def _var(self, lb=0, ub=modeler.inf, cat=int, name=None):
+    def _var(self,
+             lb: float = 0,
+             ub: float = modeler.inf,
+             cat: type = int,
+             name: typing.Optional[str] = None) -> 'minilp.expr.var':
+        """ Create a variable of the given category.
+
+        Args:
+            lb: Lower bound of the variable (or -inf for unbounded).
+            ub: Upper bound of the variable (or inf for unbounded).
+            cat: Category of the variable (float or int).
+            name: Name of the variable.
+
+        Returns:
+            A variable of the given category with the given parameters..
+        """
         idx = self.__idx
         self.__idx += 1
         if name is None:
             name = '_x{}'.format(idx)
-        self.__vars.append(var(self, idx, lb, ub, cat, name))
+        self.__vars.append(minilp.expr.var(self, idx, lb, ub, cat, name))
         return self.__vars[-1]
 
-    def _var_dict(self, keys, lb=0, ub=modeler.inf, cat=int):
+    def _var_dict(self,
+                  keys: typing.Iterable[typing.Any],
+                  lb: typing.Union[typing.Iterable[float], float] = 0,
+                  ub: typing.Union[typing.Iterable[float], float] = modeler.inf,
+                  cat: type = int,
+                  prefix: str = '') -> typing.Dict[typing.Any, 'minilp.expr.var']:
+        """ Create a dictionary of variables of the given category
+        with the given parameters.
+
+        The names of the created variables are the concatenation of prefix
+        and the key.
+
+        Args:
+            keys: Keys of the dictionary to create (one key per variable).
+            lb: Lower bounds of the variables (or -inf for unbounded). Either a
+                list of values (one value per key), or a single value to use
+                for all the keys.
+            ub: Upper bounds of the variables (or -inf for unbounded). Either a
+                list of values (one value per key), or a single value to use
+                for all the keys.
+            cat: Category of the variable (float or int).
+            prefix: Prefix for the name of the variable.
+
+        Returns:
+            A dictionary of variables of the given category with the given parameters..
+        """
+        keys = tuple(keys)
         if not isinstance(lb, collections.Iterable):
             lb = [lb] * len(keys)
         if not isinstance(ub, collections.Iterable):
             ub = [ub] * len(keys)
-        return {k: self._var(l, u, cat, k) for l, u, k in zip(lb, ub, keys)}
+        return {k: self._var(l, u, cat, '{}{}'.format(prefix, k))
+                for l, u, k in zip(lb, ub, keys)}
 
-    def _var_list(self, n, lb=0, ub=modeler.inf, prefix=None, cat=int):
-        if not isinstance(n, collections.Iterable):
+    def _var_list(self,
+                  n_or_names: typing.Union[int, typing.Iterable[str]],
+                  lb: float = 0,
+                  ub: float = modeler.inf,
+                  cat: type = int,
+                  prefix: str = '') -> typing.List['minilp.expr.var']:
+        """ Create a list of variables of the given category
+        with the given parameters.
+
+        The names of the created variables are the concatenation of prefix
+        and the index (if n_or_names is an integer) or the name.
+
+        Args:
+            n_or_names: Number of variables or names of the variable.
+            lb: Lower bounds of the variables (or -inf for unbounded). Either a
+                list of values (one value per key), or a single value to use
+                for all the variables.
+            ub: Upper bounds of the variables (or -inf for unbounded). Either a
+                list of values (one value per key), or a single value to use
+                for all the variables.
+            cat: Category of the variable (float or int).
+            prefix: Prefix for the name of the variable.
+
+        Returns:
+            A dictionary of variables of the given category with the given parameters..
+        """
+        if not isinstance(n_or_names, collections.Iterable):
             if prefix is None:
-                prefix = '_x'
-            ks = ['{}{}'.format(prefix, i) for i in range(n)]
-        else:
-            ks = n
-            if prefix is not None:
-                ks = ['{}{}'.format(prefix, u) for u in ks]
-        vs = self._var_dict(ks, lb, ub, cat)
-        return [vs[k] for k in ks]
+                n_or_names = [None] * n_or_names
+            else:
+                n_or_names = map(str, range(n_or_names))
+        if prefix is not None:
+            n_or_names = ['{}{}'.format(prefix, c) for c in n_or_names]
+        if not isinstance(lb, collections.Iterable):
+            lb = [lb] * len(n_or_names)
+        if not isinstance(ub, collections.Iterable):
+            ub = [ub] * len(n_or_names)
+        return [self._var(l, u, cat, n)
+                for l, u, n in zip(lb, ub, n_or_names)]
 
-    def binary_var(self, name=None):
+    def binary_var(self, name: typing.Optional[str] = None) -> 'minilp.expr.var':
         """ Create a new binary variable with the given name.
 
-        Parameters:
-          - name Name of the variable.
+        Args:
+            name: Name of the variable. If None, a name will be
+                  automatically generated.
 
-        Return: A binary varible. """
+        Returns:
+            A binary variable with the given parameters.
+        """
         return self._var(0, 1, int, name)
 
-    def integer_var(self, lb=0, ub=modeler.inf, name=None):
+    def integer_var(self,
+                    lb: float = 0,
+                    ub: float = modeler.inf,
+                    name: typing.Optional[str] = None) -> 'minilp.expr.var':
         """ Create a new integer variable with the given bounds and name.
 
-        Parameters:
-          - lb Lower bound of the variable (or -inf for unbounded).
-          - ub Upper bound of the variable (or inf for unbounded).
-          - name Name of the variable.
+        Args:
+            lb: Lower bound of the variable (or -inf for unbounded).
+            ub: Upper bound of the variable (or inf for unbounded).
+            name: Name of the variable. If None, a name will be
+                  automatically generated.
 
-        Return: An integer variable. """
+        Returns:
+            An integer variable with the given parameters.
+        """
         return self._var(lb, ub, int, name)
 
-    def continuous_var(self, lb=0, ub=modeler.inf, name=None):
+    def continuous_var(self,
+                       lb: float = 0,
+                       ub: float = modeler.inf,
+                       name: typing.Optional[str] = None) -> 'minilp.expr.var':
         """ Create a new continuous variable with the given bounds and name.
 
-        Parameters:
-          - lb Lower bound of the variable (or -inf for unbounded).
-          - ub Upper bound of the variable (or inf for unbounded).
-          - name Name of the variable.
+        Args:
+            lb: Lower bound of the variable (or -inf for unbounded).
+            ub: Upper bound of the variable (or inf for unbounded).
+            name: Name of the variable. If None, a name will be
+                  automatically generated.
 
-        Return: A continuous variable. """
+        Returns:
+            A continuous variable with the given parameters.
+        """
         return self._var(lb, ub, float, name)
 
-    def binary_var_list(self, n, prefix=None):
-        """ Create a list of binary variables with the given prefix.
+    def binary_var_list(
+            self,
+            n_or_names: typing.Union[int, typing.Iterable],
+            prefix: typing.Optional[str] = None) -> typing.List['minilp.expr.var']:
+        """ Create a list of binary variables.
 
-        Parameters:
-          - n Number of binary variables to create or list of variable names.
-          - prefix Prefix for the name of the variable.
+        The name of the variable is created by concatenating the prefix with
+        either the index of the variable (if n_or_names is an int) or the
+        name in n_or_names. If prefix is None, names are generated as if multiple
+        calls to binary_var had been made.
 
-        Return: A list of binary variables. """
-        return self._var_list(n, 0, 1, prefix, int)
+        Args:
+            n_or_names: Number of variables to create or list of variable names.
+            prefix: Prefix for the name of the variable.
 
-    def integer_var_list(self, n, lb=0, ub=modeler.inf, prefix=None):
-        """ Create a list of integer variables with given bounds and prefix.
+        Returns:
+            A list of binary variables with the given parameters.
+        """
+        return self._var_list(n_or_names, 0, 1, int, prefix)
 
-        Parameters:
-          - n Number of integer variables to create or list of variable names.
-          - lb Lower bound of the variable (or -inf for unbounded), can be a
-            single value (same lower bound for all variables) or a list of
-            lower bounds.
-          - ub Upper bound of the variable (or inf for unbounded), can be a
-            single value (same upper bound for all variables) or a list of
-            upper bounds.
-          - prefix Prefix for the name of the variable.
+    def integer_var_list(
+            self,
+            n_or_names: typing.Union[int, typing.Iterable],
+            lb: float = 0,
+            ub: float = modeler.inf,
+            prefix: typing.Optional[str] = None) -> typing.List['minilp.expr.var']:
+        """ Create a list of integer variables.
 
-        Return: A list of integer variables. """
-        return self._var_list(n, lb, ub, prefix, int)
+        The name of the variable is created by concatenating the prefix with
+        either the index of the variable (if n_or_names is an int) or the
+        name in n_or_names. If prefix is None, names are generated as if multiple
+        calls to integer_var had been made.
 
-    def continuous_var_list(self, n, lb=0, ub=modeler.inf, prefix=None):
-        """ Create a list of continuous variables with given bounds and prefix.
+        Args:
+            n_or_names: Number of variables to create or list of variable names.
+            lb: Lower bound of the variable (or -inf for unbounded), can be a
+                single value (same lower bound for all variables) or a list of
+                lower bounds.
+            ub: Upper bound of the variable (or inf for unbounded), can be a
+                single value (same upper bound for all variables) or a list of
+                upper bounds.
+            prefix: Prefix for the name of the variable.
 
-        Parameters:
-          - n Number of continuous variables to create or list of variable names.
-          - lb Lower bound of the variable (or -inf for unbounded), can be a
-            single value (same lower bound for all variables) or a list of
-            lower bounds.
-          - ub Upper bound of the variable (or inf for unbounded), can be a
-            single value (same upper bound for all variables) or a list of
-            upper bounds.
-          - prefix Prefix for the name of the variable.
+        Returns:
+            A list of integer variables with the given parameters.
+        """
+        return self._var_list(n_or_names, lb, ub, int, prefix)
 
-        Return: A list of continuous variables. """
-        return self._var_list(n, lb, ub, prefix, float)
+    def continuous_var_list(
+            self,
+            n_or_names: typing.Union[int, typing.Iterable],
+            lb: float = 0,
+            ub: float = modeler.inf,
+            prefix: typing.Optional[str] = None) -> typing.List['minilp.expr.var']:
+        """ Create a list of continuous variables.
 
-    def binary_var_dict(self, keys):
-        """ Create a dictionary of binary variables indexed by the given keys.
+        The name of the variable is created by concatenating the prefix with
+        either the index of the variable (if n_or_names is an int) or the
+        name in n_or_names. If prefix is None, names are generated as if multiple
+        calls to continuous_var had been made.
 
-        Parameters:
-          - keys Keys for the dictionary.
+        Args:
+            n_or_names: Number of variables to create or list of variable names.
+            lb: Lower bound of the variable (or -inf for unbounded), can be a
+                single value (same lower bound for all variables) or a list of
+                lower bounds.
+            ub: Upper bound of the variable (or inf for unbounded), can be a
+                single value (same upper bound for all variables) or a list of
+                upper bounds.
+            prefix: Prefix for the name of the variable.
 
-        Return: A dictionary of binary variables. """
+        Returns:
+            A list of continuous variables with the given parameters.
+        """
+        return self._var_list(n_or_names, lb, ub, float, prefix)
+
+    def binary_var_dict(
+            self,
+            keys: typing.Dict) -> typing.Dict[typing.Any, 'minilp.expr.var']:
+        """ Create a dictionary of binary variables.
+
+        Args:
+            keys: Keys of the dictionary (used for variable names).
+
+        Returns:
+            A dictionary of binary variables.
+        """
         return self._var_dict(keys, 0, 1, int)
 
-    def integer_var_dict(self, keys, lb=0, ub=modeler.inf):
-        """ Create a dictionary of integer variables with given bounds indexed
-        by the given keys.
+    def integer_var_dict(
+            self,
+            keys: typing.Dict,
+            lb: float = 0,
+            ub: float = modeler.inf) -> typing.Dict[typing.Any, 'minilp.expr.var']:
+        """ Create a dictionary of integer variables.
 
-        Parameters:
-          - keys Keys for the dictionary.
-          - lb Lower bound of the variable (or -inf for unbounded), can be a
-            single value (same lower bound for all variables) or a list of
-            lower bounds.
-          - ub Upper bound of the variable (or inf for unbounded), can be a
-            single value (same upper bound for all variables) or a list of
-            upper bounds.
+        Args:
+            keys: Keys for the dictionary (used for variable names).
+            lb: Lower bound of the variable (or -inf for unbounded), can be a
+                single value (same lower bound for all variables) or a list of
+                lower bounds.
+            ub: Upper bound of the variable (or inf for unbounded), can be a
+                single value (same upper bound for all variables) or a list of
+                upper bounds.
 
-        Return: A dictionary of integer variables. """
+        Returns:
+            A dictionary of integer variables with the given parameters.
+        """
         return self._var_dict(keys, lb, ub, int)
 
-    def continuous_var_dict(self, keys, lb=0, ub=modeler.inf):
-        """ Create a dictionary of continuous variables with given bounds indexed
-        by the given keys.
+    def continuous_var_dict(
+            self,
+            keys: typing.Dict,
+            lb: float = 0,
+            ub: float = modeler.inf) -> typing.Dict[typing.Any, 'minilp.expr.var']:
+        """ Create a dictionary of continuous variables.
 
-        Parameters:
-          - keys Keys for the dictionary.
-          - lb Lower bound of the variable (or -inf for unbounded), can be a
-            single value (same lower bound for all variables) or a list of
-            lower bounds.
-          - ub Upper bound of the variable (or inf for unbounded), can be a
-            single value (same upper bound for all variables) or a list of
-            upper bounds.
+        Args:
+            keys: Keys for the dictionary (used for variable names).
+            lb: Lower bound of the variable (or -inf for unbounded), can be a
+                single value (same lower bound for all variables) or a list of
+                lower bounds.
+            ub: Upper bound of the variable (or inf for unbounded), can be a
+                single value (same upper bound for all variables) or a list of
+                upper bounds.
 
-        Return: A dictionary of continuous variables. """
+        Returns:
+            A dictionary of continuous variables with the given paramaeters.
+        """
         return self._var_dict(keys, lb, ub, float)
 
-    def add_constraint(self, constraint):
-        """ Add a constraint to the problem.
+    def add_constraint(self,
+                       constraint: 'minilp.expr.cons') -> 'minilp.expr.cons':
+        """ Add the given constraint to the problem.
 
-        Parameter:
-          - constraint Constraint to add (minilp.expr.cons).
+        Args:
+            constraint: Constraint to add to the problem.
 
-        Return: The constraint. """
-        
-        if not isinstance(constraint, cons):
+        Returns:
+            The added constraint.
+        """
+
+        if not isinstance(constraint, minilp.expr.cons):
             raise ValueError('Constraint must be a valid {} instance.'.format(
-                '.'.join([cons.__module__, cons.__name__])))
-            
+                '.'.join([minilp.expr.cons.__module__, minilp.expr.cons.__name__])))
+
+        if constraint._pb != self:
+            raise ValueError(
+                'Cannot share constraints between different {} instances.'.format(
+                    '.'.join([problem.__module__, problem.__name__])))
+
         self.__cons.append(constraint)
         return self.__cons[-1]
 
-    def add_constraints(self, constraints):
-        """ Add constraints to the problem.
+    def add_constraints(self,
+                        constraints: typing.Iterable['minilp.expr.cons']
+                        ) -> typing.List['minilp.expr.cons']:
+        """ Add the given constraints to the problem.
 
-        Parameter:
-          - constraints Constraints to add (minilp.expr.cons).
+        Args:
+            constraints: List of constraints to add to the problem.
 
-        Return: List containing the constraints. """
+        Returns:
+            The list of constraints added to the problem.
+        """
         return [self.add_constraint(c) for c in constraints]
 
-    def del_constraint(self, constraint_or_idx):
+    def del_constraint(self,
+                       constraint_or_idx: typing.Union[int, 'minilp.expr.cons']):
         """ Delete the specified constraint from the problem.
 
-        Parameter:
-          - constraint_or_idx Constraint (minilp.expr.cons) or index of the constraint
-            to remove.
+        Args:
+            constraint_or_idx: Constraint or index of the constraint
+                               to remove.
         """
         idx = constraint_or_idx
-        if isinstance(idx, cons):
+        if isinstance(idx, minilp.expr.cons):
             idx = self.__cons.index(idx)
         del self.__cons[idx]
 
-    def del_constraints(self, constraints_or_idxs):
+    def del_constraints(self,
+                        constraints_or_idxs:
+                            typing.Iterable[typing.Union[int, 'minilp.expr.cons']]):
         """ Delete the specified constraints from the problem.
 
-        Parameter:
-          - constraints_or_idxs Constraints (minilp.expr.cons) or indexes of the constraints
-            to remove.
+        Args:
+            constraints_or_idxs: Constraints or indexes of the constraints
+                                 to remove.
         """
         # Create a copy in case the given list is the list of constraints:
         constraints_or_idxs = list(constraints_or_idxs)
-        
+
         for c in constraints_or_idxs:
             self.del_constraint(c)
 
-    def set_objective(self, sense, objective):
-        """ Set the objective value.
+    def set_objective(self,
+                      sense: str,
+                      objective: 'minilp.expr.expr'):
+        """ Set the objective of the problem.
 
-        Parameters:
-          - sense Sense of the objective ('min' or 'max').
-          - objective Expression of the objective value (minilp.expr.expr).
+        Args:
+            sense: Sense of the objective ('min' or 'max').
+            objective: Expression of the objective of the problem.
         """
         if sense not in ['min', 'max']:
             raise ValueError('Unrecognized sense for optimization: {}.'.format(sense))
-        
-        if not isinstance(objective, expr):
+
+        if not isinstance(objective, minilp.expr.expr):
             raise ValueError('Objective must be a valid {} instance.'.format(
-                '.'.join([expr.__module__, expr.__name__])))
-        
+                '.'.join([minilp.expr.expr.__module__, minilp.expr.expr.__name__])))
+
+        if objective._pb != self:
+            raise ValueError(
+                'Cannot share expressions between different {} instances.'.format(
+                    '.'.join([problem.__module__, problem.__name__])))
+
         self.__sense = sense
         self.__obj = objective
-        
-    def maximize(self, objective):
+
+    def maximize(self,
+                 objective: 'minilp.expr.expr'):
         """ Set the objective value as a maximixation.
-        
-        Parameters:
-          - objective Expression of the objective value (minilp.expr.expr).
+
+        Args:
+            objective: Expression of the objective of the problem.
         """
         self.set_objective('max', objective)
-        
-    def minimize(self, objective):
+
+    def minimize(self,
+                 objective: 'minilp.expr.expr'):
         """ Set the objective value as a minimization.
-        
-        Parameters:
-          - objective Expression of the objective value (minilp.expr.expr).
+
+        Args:
+            objective: Expression of the objective value of the problem.
         """
         self.set_objective('min', objective)
 
     @property
-    def variables(self):
+    def variables(self) -> typing.List['minilp.expr.var']:
         """ List of variables of the problem. """
         return self.__vars
 
     @property
-    def constraints(self):
+    def constraints(self) -> typing.List['minilp.expr.cons']:
         """ List of constraints of the problem. """
         return self.__cons
 
     @property
-    def objective(self):
-        """ Objective of the problem. """
+    def objective(self) -> 'minilp.expr.expr':
+        """ Objective expression of the problem. """
         return self.__obj
 
     @property
-    def sense(self):
-        """ Sense of the problem objective (min or max). """
+    def sense(self) -> str:
+        """ Sense of the problem objective ('min' or 'max'). """
         return self.__sense
 
-    def lp_solve(self, solver=None):
-        """ Solve a relaxation of the problem using the specific solver. """
-        if solver is None:
-            solver = solvers.get_default_solver()
+    def _clean(self):
+        """ Clean this problem by extending, if necessary, the expression
+        with new variables. """
         ncols = len(self.variables) + 1
         self.__obj._u = np.concatenate(
            (self.__obj._u, np.zeros(max(0, ncols - len(self.__obj._u)))))
@@ -280,13 +436,24 @@ class problem(modeler):
         for vs in self.__vars:
             vs._u = np.concatenate(
                 (vs._u, np.zeros(max(0, ncols - len(vs._u)))))
+
+    def lp_solve(self, solver: typing.Optional['minilp.solvers.solver'] = None):
+        """ Solve a relaxation of the problem using the specific solver.
+
+        Args:
+            solver: Solver to use to solve the linear relaxation of this problem.
+
+        Returns:
+            The solution returned by the given solver for this problem.
+        """
+        if solver is None:
+            solver = minilp.solvers.get_default_solver()
         return solver.solve(self)
 
     def __str__(self):
         s = []
         s.append('ILP --- {}'.format(self.name))
         s.append('-' * len(s[0]))
-        s.append('')
         s.append('{}.   {}'.format(
             self.sense,
             self.objective))
@@ -296,6 +463,6 @@ class problem(modeler):
                 s.append('       {}'.format(c))
 
         return '\n'.join(s)
-    
+
     def __repr__(self):
         return str(self)
