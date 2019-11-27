@@ -9,7 +9,7 @@ from .modeler import modeler
 import minilp.problems
 
 
-class oper(enum.Enum):
+class comparison_operator(enum.Enum):
 
     """ Enumeration class containing the valid comparison operators for
     linear expression (<=, ==, >=). """
@@ -20,6 +20,9 @@ class oper(enum.Enum):
 
 
 class expr:
+
+    _u: np.ndarray
+    _pb: 'minilp.problems.problem'
 
     """ Class representing a linear expression, i.e., a weighted
     sum of variables.
@@ -101,8 +104,7 @@ class expr:
         """
         if isinstance(other, expr):
             raise ValueError('Cannot multiply expression.')
-        other = expr(other, self._pb)
-        return expr(self._u * other._u[0], self._pb)
+        return expr(self._u * other, self._pb)
 
     def __radd__(self, other: typing.Union['expr', float]) -> 'expr':
         """ Create a new expression by adding the given value or expression to
@@ -142,7 +144,7 @@ class expr:
         """
         return self * other
 
-    def __eq__(self, other: typing.Union['expr', float]) -> 'cons':
+    def __eq__(self, other: typing.Union['expr', float]) -> 'cons':  # type: ignore
         """ Create a new equality constraint between this expression and
         the given value or expression.
 
@@ -152,7 +154,7 @@ class expr:
         Returns:
             A new equality constraint between this expresion and the given one.
         """
-        return cons(self, oper.eq, expr(other, self._pb))
+        return cons(self, comparison_operator.eq, expr(other, self._pb))
 
     def __ge__(self, other: typing.Union['expr', float]) -> 'cons':
         """ Create a new greater-or-equal constraint between this expression and
@@ -164,7 +166,7 @@ class expr:
         Returns:
             A new greater-or-equal constraint between this expresion and the given one.
         """
-        return cons(self, oper.ge, expr(other, self._pb))
+        return cons(self, comparison_operator.ge, expr(other, self._pb))
 
     def __le__(self, other: typing.Union['expr', float]) -> 'cons':
         """ Create a new lower-or-equal constraint between this expression and
@@ -176,7 +178,7 @@ class expr:
         Returns:
             A new lower-or-equal constraint between this expresion and the given one.
         """
-        return cons(self, oper.le, expr(other, self._pb))
+        return cons(self, comparison_operator.le, expr(other, self._pb))
 
     def __repr__(self):
         s = ''
@@ -214,6 +216,8 @@ class expr:
 
 
 class var(expr):
+
+    _idx: int
 
     """ A variable is a simple linear expression with a coefficient of 1. """
 
@@ -260,13 +264,13 @@ class cons:
 
     # Representation of the operator:
     _op_repr = {
-        oper.le: '<=',
-        oper.eq: '=='
+        comparison_operator.le: '<=',
+        comparison_operator.eq: '=='
     }
 
     def __init__(self,
                  lhs: expr,
-                 cmp: oper,
+                 cmp: comparison_operator,
                  rhs: expr):
         """
         Args:
@@ -281,8 +285,8 @@ class cons:
 
         self._pb = lhs._pb
 
-        if cmp == oper.ge:
-            lhs, cmp, rhs = -lhs, oper.le, -rhs
+        if cmp == comparison_operator.ge:
+            lhs, cmp, rhs = -lhs, comparison_operator.le, -rhs
 
         ul = lhs._u.copy()
         ur = rhs._u.copy()
@@ -313,7 +317,7 @@ class cons:
         return self._r
 
     @property
-    def oper(self) -> oper:
+    def oper(self) -> comparison_operator:
         """ Comparison operator of the constraint (either oper.ge or oper.eq). """
         return self._c
 

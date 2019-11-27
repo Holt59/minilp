@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 
-import numpy as np
+import math
 import typing
 
 
 class modeler:
 
-    inf = np.inf
-    nan = np.nan
+    inf = float('inf')
+    nan = float('nan')
 
     @staticmethod
     def isnan(value: float) -> bool:
@@ -19,10 +19,10 @@ class modeler:
         Returns:
             True if the given value is nan, False otherwize.
         """
-        return np.isnan(value)
+        return math.isnan(value)
 
     @staticmethod
-    def sum(iterable: typing.Iterable[typing.SupportsFloat],
+    def sum(iterable: typing.Iterable,
             start: float = 0) -> float:
         """ Sum the values in the given iterable.
 
@@ -36,8 +36,8 @@ class modeler:
         return sum(iterable, start)
 
     @staticmethod
-    def dot(lhs: typing.Iterable[typing.SupportsFloat],
-            rhs: typing.Iterable[typing.SupportsFloat]) -> float:
+    def dot(lhs: typing.Iterable,
+            rhs: typing.Iterable) -> float:
         """ Compute the dot product of two iterables.
 
         Args:

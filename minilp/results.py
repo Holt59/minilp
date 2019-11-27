@@ -7,7 +7,7 @@ from minilp.modeler import modeler
 import minilp.expr
 
 
-class status(enum.Enum):
+class solve_status(enum.Enum):
 
     """ Enumeration class representing the status of a problem
     solution. """
@@ -28,7 +28,7 @@ class result:
 
     def __init__(self,
                  success: bool = False,
-                 status: status = status.unknown,
+                 status: solve_status = solve_status.unknown,
                  objective: float = modeler.nan,
                  variables: typing.Optional[typing.Iterable[float]] = None):
         """
@@ -41,7 +41,10 @@ class result:
         self.__success = success
         self.__status = status
         self.__objective = objective
-        self.__vs = variables
+        if variables is None:
+            self.__vs = None
+        else:
+            self.__vs = list(variables)
 
     def get_value(self, variable: 'minilp.expr.var') -> float:
         """ Retrieve the value associated to the given variable.
@@ -52,6 +55,9 @@ class result:
         Returns:
             The value associated with the given variable in this solution.
         """
+        if self.__vs is None:
+            raise ValueError('No value associated to variable {} in  this solution'.format(
+                variable))
         value = self.__vs[variable._idx - 1]
         return value
 
@@ -74,7 +80,7 @@ class result:
         return self.__success
 
     @property
-    def status(self) -> status:
+    def status(self) -> solve_status:
         """ Status of this result. """
         return self.__status
 

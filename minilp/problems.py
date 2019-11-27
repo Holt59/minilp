@@ -11,6 +11,10 @@ import minilp.solvers
 
 class problem(minilp.modeler.modeler):
 
+    __vars: typing.List['minilp.expr.var']
+    __cons: typing.List['minilp.expr.cons']
+    __obj: 'minilp.expr.expr'
+
     def __init__(self, name: str = ''):
         """ Create a new problem with the given name and sense for the objective.
 
@@ -21,7 +25,7 @@ class problem(minilp.modeler.modeler):
         self.__vars = []
         self.__cons = []
         self.__sense = 'min'
-        self.__obj = 0
+        self.__obj = minilp.expr.expr(0, self)
         self.name = name
 
     def _var(self,
@@ -83,10 +87,10 @@ class problem(minilp.modeler.modeler):
 
     def _var_list(self,
                   n_or_names: typing.Union[int, typing.Iterable[str]],
-                  lb: float = 0,
-                  ub: float = modeler.inf,
+                  lb: typing.Union[float, typing.Iterable[float]] = 0,
+                  ub: typing.Union[float, typing.Iterable[float]] = modeler.inf,
                   cat: type = int,
-                  prefix: str = '') -> typing.List['minilp.expr.var']:
+                  prefix: typing.Optional[str] = None) -> typing.List['minilp.expr.var']:
         """ Create a list of variables of the given category
         with the given parameters.
 
@@ -107,19 +111,22 @@ class problem(minilp.modeler.modeler):
         Returns:
             A dictionary of variables of the given category with the given parameters..
         """
+        names: typing.Union[typing.Iterable[str], typing.Iterable[None]]
         if not isinstance(n_or_names, collections.abc.Iterable):
             if prefix is None:
-                n_or_names = [None] * n_or_names
+                names = [None] * n_or_names
             else:
-                n_or_names = map(str, range(n_or_names))
+                names = [str(c) for c in range(n_or_names)]
+        else:
+            names = list(n_or_names)
         if prefix is not None:
-            n_or_names = ['{}{}'.format(prefix, c) for c in n_or_names]
+            names = ['{}{}'.format(prefix, c) for c in names]
         if not isinstance(lb, collections.abc.Iterable):
-            lb = [lb] * len(n_or_names)
+            lb = [lb] * len(names)
         if not isinstance(ub, collections.abc.Iterable):
-            ub = [ub] * len(n_or_names)
+            ub = [ub] * len(names)
         return [self._var(l, u, cat, n)
-                for l, u, n in zip(lb, ub, n_or_names)]
+                for l, u, n in zip(lb, ub, names)]
 
     def binary_var(self, name: typing.Optional[str] = None) -> 'minilp.expr.var':
         """ Create a new binary variable with the given name.

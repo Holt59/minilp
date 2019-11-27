@@ -28,7 +28,7 @@ class solver(abc.ABC):
         pass
 
 
-class pysimplex:
+class pysimplex(solver):
 
     eps = 1e-8
 
@@ -91,7 +91,7 @@ class pysimplex:
         nse = len(pb.variables) + 1
         for cn in pb.constraints:
             A[row, 1:(len(pb.variables) + 1)] = cn.lhs._u[1:]
-            if cn.oper == minilp.expr.oper.le:
+            if cn.oper == minilp.expr.comparison_operator.le:
                 A[row, nse] = 1
             A[row, -1] = cn.rhs
             row += 1
@@ -162,14 +162,14 @@ class pysimplex:
         return minilp.results.result(True, 'optimal', mul * z, x[:len(pb.variables)])
 
 
-class scipy:
+class scipy(solver):
 
     # Mapping between scipy status and minilp status.
     _status = [
-        minilp.results.status.optimal,
-        minilp.results.status.unknown,
-        minilp.results.status.infeasible,
-        minilp.results.status.unbounded
+        minilp.results.solve_status.optimal,
+        minilp.results.solve_status.unknown,
+        minilp.results.solve_status.infeasible,
+        minilp.results.solve_status.unbounded
     ]
 
     def __init__(self):
@@ -191,7 +191,7 @@ class scipy:
         }
         A_ub, b_ub, A_eq, b_eq = [], [], [], []
         for c in problem.constraints:
-            if c.oper == minilp.expr.oper.le:
+            if c.oper == minilp.expr.comparison_operator.le:
                 A_ub.append(c._e._u[1:])
                 b_ub.append(c._r)
             else:
@@ -215,17 +215,18 @@ class scipy:
         return minilp.results.result(res.success, scipy._status[res.status], res.fun, res.x)
 
 
-class docplex:
+class docplex(solver):
 
     def __init__(self):
-        from docloud.status import JobSolveStatus
+        from docplex.util.status import JobSolveStatus
         self.status = {
-            JobSolveStatus.UNKNOWN: minilp.results.status.unknown,
-            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.status.feasible,
-            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.status.optimal,
-            JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION: minilp.results.status.unknown,
-            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.status.infeasible,
-            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.status.unbounded
+            JobSolveStatus.UNKNOWN: minilp.results.solve_status.unknown,
+            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.solve_status.feasible,
+            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.solve_status.optimal,
+            JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION:
+                minilp.results.solve_status.unknown,
+            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.solve_status.infeasible,
+            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.unbounded
         }
 
     def solve(self, problem):
@@ -254,7 +255,7 @@ class docplex:
             for cn in problem.constraints:
                 lhs = sum(c * v for c, v in zip(cn.lhs._u[1:], v))
                 rhs = cn.rhs
-                if cn.oper == minilp.expr.oper.eq:
+                if cn.oper == minilp.expr.comparison_operator.eq:
                     m.add_constraint(lhs == rhs)
                 else:
                     m.add_constraint(lhs <= rhs)
@@ -302,7 +303,7 @@ def get_default_solver() -> solver:
     for solver in solvers:
         try:
             s = solver()  # try to construct a solver
-        except:
+        except ImportError:
             pass
         else:
             return s
