@@ -2,6 +2,7 @@
 *~
 
 # Documentation build
+.tox
 doc/_build
 
 # Python files

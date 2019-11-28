@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fp:
     long_description = fp.read()
@@ -36,7 +36,7 @@ setup(
     install_requires=install_requires,
     test_requires=test_requires,
     extras_require={"test": test_requires},
-    py_modules=["minilp"],
+    packages=find_packages(),
     description="Python 3 light Linear Programming module",
     long_description=long_description,
     license="MIT",
