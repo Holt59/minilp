@@ -7,7 +7,7 @@ import minilp
 
 def test_minilp_lp():
 
-    lp = minilp.problem('My first LP problem')
+    lp = minilp.problem("My first LP problem")
     # Create two continuous variables within [0, 4]:
     x1, x2 = lp.continuous_var_list(2, 0, 4)
 
@@ -18,7 +18,7 @@ def test_minilp_lp():
     lp.add_constraint(2 * x1 - x2 <= 6)
 
     # Set the objective function:
-    lp.set_objective('max', x1 + 2 * x2)
+    lp.set_objective("max", x1 + 2 * x2)
 
     # Solve the problem:
     res = lp.lp_solve()
@@ -31,14 +31,14 @@ def test_minilp_lp():
 
 def test_minilp_kp():
     N = 5
-    p = [1, 4, 5, 3, 5] # profits
-    w = [3, 4, 3, 5, 9] # weights
-    K = 10 # capacity
+    p = [1, 4, 5, 3, 5]  # profits
+    w = [3, 4, 3, 5, 9]  # weights
+    K = 10  # capacity
 
     assert N == len(w) and N == len(p)
 
     # A simple knapsack:
-    kp = minilp.problem('Simple knapsack')
+    kp = minilp.problem("Simple knapsack")
 
     # Create variables, add constraints and set the objective:
     x = kp.binary_var_list(N)

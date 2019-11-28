@@ -20,19 +20,25 @@
 
 from setuptools import setup
 
-import minilp
-
 with open("README.md", "r") as fp:
     long_description = fp.read()
 
-setup(name="minilp",
-      version=minilp.__version__,
-      author="Mikaël Capelle",
-      author_email="capelle.mikael@gmail.com",
-      url="https://github.com/Holt59/minilp",
-      tests_require=["pytest", "mypy"],
-      py_modules=["minilp"],
-      description="Python 3 light Linear Programming module",
-      long_description=long_description,
-      license="MIT",
-      python_requires=">=3.5")
+install_requires = ["numpy", "scipy"]
+
+test_requires = ["pytest", "mypy", "black", "flake8", "flake8-black"]
+
+setup(
+    name="minilp",
+    version="0.0.1",
+    author="Mikaël Capelle",
+    author_email="capelle.mikael@gmail.com",
+    url="https://github.com/Holt59/minilp",
+    install_requires=install_requires,
+    test_requires=test_requires,
+    extras_require={"test": test_requires},
+    py_modules=["minilp"],
+    description="Python 3 light Linear Programming module",
+    long_description=long_description,
+    license="MIT",
+    python_requires=">=3.5",
+)
