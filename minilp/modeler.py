@@ -6,8 +6,8 @@ import typing
 
 class modeler:
 
-    inf = float('inf')
-    nan = float('nan')
+    inf = float("inf")
+    nan = float("nan")
 
     @staticmethod
     def isnan(value: float) -> bool:
@@ -22,8 +22,7 @@ class modeler:
         return math.isnan(value)
 
     @staticmethod
-    def sum(iterable: typing.Iterable,
-            start: float = 0) -> float:
+    def sum(iterable: typing.Iterable, start: float = 0) -> float:
         """ Sum the values in the given iterable.
 
         Args:
@@ -36,8 +35,7 @@ class modeler:
         return sum(iterable, start)
 
     @staticmethod
-    def dot(lhs: typing.Iterable,
-            rhs: typing.Iterable) -> float:
+    def dot(lhs: typing.Iterable, rhs: typing.Iterable) -> float:
         """ Compute the dot product of two iterables.
 
         Args:

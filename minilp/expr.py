@@ -14,15 +14,15 @@ class comparison_operator(enum.Enum):
     """ Enumeration class containing the valid comparison operators for
     linear expression (<=, ==, >=). """
 
-    le = '<='
-    eq = '=='
-    ge = '>='
+    le = "<="
+    eq = "=="
+    ge = ">="
 
 
 class expr:
 
     _u: np.ndarray
-    _pb: 'minilp.problems.problem'
+    _pb: "minilp.problems.problem"
 
     """ Class representing a linear expression, i.e., a weighted
     sum of variables.
@@ -30,9 +30,11 @@ class expr:
     An expression is associated with a minilp problem and contains
     an array of coefficients for the variable in the problem. """
 
-    def __init__(self,
-                 arr: typing.Union['expr', np.ndarray, float],
-                 pb: 'minilp.problems.problem'):
+    def __init__(
+        self,
+        arr: typing.Union["expr", np.ndarray, float],
+        pb: "minilp.problems.problem",
+    ):
         """
         Args:
             arr: Array containing, for each variable in the corresponding
@@ -50,15 +52,15 @@ class expr:
             self._u = np.array([arr])
             self._pb = pb
 
-    def __pos__(self) -> 'expr':
+    def __pos__(self) -> "expr":
         """ Returns: This expression. """
         return expr(self._u, self._pb)
 
-    def __neg__(self) -> 'expr':
+    def __neg__(self) -> "expr":
         """ Returns: The negation of this expression. """
         return expr(-self._u, self._pb)
 
-    def __add__(self, other: typing.Union['expr', float]) -> 'expr':
+    def __add__(self, other: typing.Union["expr", float]) -> "expr":
         """ Create a new expression by adding the given value or expression to
         this expression.
 
@@ -73,13 +75,13 @@ class expr:
             other = expr(other, self._pb)
 
         if self._pb != other._pb:
-            raise ValueError('Cannot add expression from different problems.')
+            raise ValueError("Cannot add expression from different problems.")
         ms = max(len(self._u), len(other._u))
         lhs = np.concatenate((self._u, np.zeros(max(0, ms - len(self._u)))))
         rhs = np.concatenate((other._u, np.zeros(max(0, ms - len(other._u)))))
         return expr(lhs + rhs, self._pb)
 
-    def __sub__(self, other: typing.Union['expr', float]) -> 'expr':
+    def __sub__(self, other: typing.Union["expr", float]) -> "expr":
         """ Create a new expression by substracting the given value or expression
         from this expression.
 
@@ -92,7 +94,7 @@ class expr:
         """
         return self + (-other)
 
-    def __mul__(self, other: float) -> 'expr':
+    def __mul__(self, other: float) -> "expr":
         """ Multiply this expression by the given value.
 
         Args:
@@ -103,10 +105,10 @@ class expr:
             expression with the given value.
         """
         if isinstance(other, expr):
-            raise ValueError('Cannot multiply expression.')
+            raise ValueError("Cannot multiply expression.")
         return expr(self._u * other, self._pb)
 
-    def __radd__(self, other: typing.Union['expr', float]) -> 'expr':
+    def __radd__(self, other: typing.Union["expr", float]) -> "expr":
         """ Create a new expression by adding the given value or expression to
         this expression.
 
@@ -119,7 +121,7 @@ class expr:
         """
         return self + other
 
-    def __rsub__(self, other: typing.Union['expr', float]) -> 'expr':
+    def __rsub__(self, other: typing.Union["expr", float]) -> "expr":
         """ Create a new expression by substracting this expression to the given value or
         expression.
 
@@ -132,7 +134,7 @@ class expr:
         """
         return -self + other
 
-    def __rmul__(self, other) -> 'expr':
+    def __rmul__(self, other: float) -> "expr":
         """ Multiply this expression by the given value.
 
         Args:
@@ -144,7 +146,7 @@ class expr:
         """
         return self * other
 
-    def __eq__(self, other: typing.Union['expr', float]) -> 'cons':  # type: ignore
+    def __eq__(self, other: typing.Union["expr", float]) -> "cons":  # type: ignore
         """ Create a new equality constraint between this expression and
         the given value or expression.
 
@@ -156,7 +158,7 @@ class expr:
         """
         return cons(self, comparison_operator.eq, expr(other, self._pb))
 
-    def __ge__(self, other: typing.Union['expr', float]) -> 'cons':
+    def __ge__(self, other: typing.Union["expr", float]) -> "cons":
         """ Create a new greater-or-equal constraint between this expression and
         the given value or expression.
 
@@ -168,7 +170,7 @@ class expr:
         """
         return cons(self, comparison_operator.ge, expr(other, self._pb))
 
-    def __le__(self, other: typing.Union['expr', float]) -> 'cons':
+    def __le__(self, other: typing.Union["expr", float]) -> "cons":
         """ Create a new lower-or-equal constraint between this expression and
         the given value or expression.
 
@@ -181,34 +183,34 @@ class expr:
         return cons(self, comparison_operator.le, expr(other, self._pb))
 
     def __repr__(self):
-        s = ''
+        s = ""
         for c, v in zip(self._u[1:], self._pb.variables):
             fmt = None
             if c == 1:
-                fmt = ' + {}{}'
-                c = ''
+                fmt = " + {}{}"
+                c = ""
             elif c == -1:
-                fmt = ' - {}{}'
-                c = ''
+                fmt = " - {}{}"
+                c = ""
             elif c < 0:
                 c = abs(c)
-                fmt = ' - {:g} * {}'
+                fmt = " - {:g} * {}"
             elif c > 0:
-                fmt = ' + {:g} * {}'
+                fmt = " + {:g} * {}"
             if fmt is not None:
                 s += fmt.format(c, v)
         if self._u[0] != 0:
             if self._u[0] > 0:
-                s += ' + '
+                s += " + "
             else:
-                s += ' - '
-            s += '{:g}'.format(abs(self._u[0]))
+                s += " - "
+            s += "{:g}".format(abs(self._u[0]))
         s = s.strip()
         if s:
-            if s[0] == '+':
+            if s[0] == "+":
                 s = s[2:]
-            elif s[0] == '-':
-                s = '-' + s[2:]
+            elif s[0] == "-":
+                s = "-" + s[2:]
         return s
 
     def __str__(self):
@@ -221,13 +223,15 @@ class var(expr):
 
     """ A variable is a simple linear expression with a coefficient of 1. """
 
-    def __init__(self,
-                 pb: 'minilp.problems.problem',
-                 idx: int,
-                 lb: float = 0,
-                 ub: float = modeler.inf,
-                 cat: type = int,
-                 name: str = ''):
+    def __init__(
+        self,
+        pb: "minilp.problems.problem",
+        idx: int,
+        lb: float = 0,
+        ub: float = modeler.inf,
+        cat: type = int,
+        name: str = "",
+    ):
         """
         Args:
             pb: Problem containing this variable.
@@ -263,15 +267,14 @@ class cons:
     """ Class representing a linear constraint. """
 
     # Representation of the operator:
-    _op_repr = {
-        comparison_operator.le: '<=',
-        comparison_operator.eq: '=='
-    }
+    _op_repr = {comparison_operator.le: "<=", comparison_operator.eq: "=="}
 
-    def __init__(self,
-                 lhs: expr,
-                 cmp: comparison_operator,
-                 rhs: expr):
+    # Attributes:
+    _e: expr
+    _c: comparison_operator
+    _r: float
+
+    def __init__(self, lhs: expr, cmp: comparison_operator, rhs: expr):
         """
         Args:
           - lhs: Left-hand side expression of the constraint.
@@ -280,8 +283,10 @@ class cons:
         """
 
         if lhs._pb != rhs._pb:
-            raise ValueError('Cannot create constraints using expressions '
-                             'from different problems.')
+            raise ValueError(
+                "Cannot create constraints using expressions "
+                "from different problems."
+            )
 
         self._pb = lhs._pb
 
@@ -322,8 +327,7 @@ class cons:
         return self._c
 
     def __repr__(self):
-        return '{} {} {:g}'.format(
-            self._e, cons._op_repr[self._c], self._r)
+        return "{} {} {:g}".format(self._e, cons._op_repr[self._c], self._r)
 
     def __str__(self):
         return repr(self)

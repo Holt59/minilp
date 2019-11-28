@@ -26,11 +26,13 @@ class result:
 
     """ Class representing the solution of a minilp problem. """
 
-    def __init__(self,
-                 success: bool = False,
-                 status: solve_status = solve_status.unknown,
-                 objective: float = modeler.nan,
-                 variables: typing.Optional[typing.Iterable[float]] = None):
+    def __init__(
+        self,
+        success: bool = False,
+        status: solve_status = solve_status.unknown,
+        objective: float = modeler.nan,
+        variables: typing.Optional[typing.Iterable[float]] = None,
+    ):
         """
         Args:
             success: True if the solution is valid, False otherrwize.
@@ -46,7 +48,7 @@ class result:
         else:
             self.__vs = list(variables)
 
-    def get_value(self, variable: 'minilp.expr.var') -> float:
+    def get_value(self, variable: "minilp.expr.var") -> float:
         """ Retrieve the value associated to the given variable.
 
         Args:
@@ -56,13 +58,15 @@ class result:
             The value associated with the given variable in this solution.
         """
         if self.__vs is None:
-            raise ValueError('No value associated to variable {} in  this solution'.format(
-                variable))
+            raise ValueError(
+                "No value associated to variable {} in  this solution".format(variable)
+            )
         value = self.__vs[variable._idx - 1]
         return value
 
-    def get_values(self,
-                   variables: typing.Iterable['minilp.expr.var']) -> typing.List[float]:
+    def get_values(
+        self, variables: typing.Iterable["minilp.expr.var"]
+    ) -> typing.List[float]:
         """ Retrieve thes value associated to the given variables.
 
         Args:
@@ -90,7 +94,7 @@ class result:
         return self.__objective
 
     def __repr__(self):
-        return 'status = {}, obj. = {}'.format(self.status, self.objective)
+        return "status = {}, obj. = {}".format(self.status, self.objective)
 
     def __bool__(self):
         return self.success

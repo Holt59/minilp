@@ -2,6 +2,7 @@
 
 import abc
 import numpy as np
+import typing
 
 from minilp.modeler import modeler
 import minilp.expr
@@ -14,8 +15,7 @@ class solver(abc.ABC):
     """ Abstract class representing a solver for linear programs (without
     integer variables). """
 
-    def solve(self,
-              problem: 'minilp.problems.problem') -> 'minilp.results.result':
+    def solve(self, problem: "minilp.problems.problem") -> "minilp.results.result":
         """
         Solve the linear relaxation of the given problem.
 
@@ -77,8 +77,7 @@ class pysimplex(solver):
         pb = problem
 
         nrows = 1 + len(pb.constraints) + 2 * len(pb.variables)
-        ncols = 1 + len(pb.variables) + len(pb.constraints) \
-            + 2 * len(pb.variables) + 1
+        ncols = 1 + len(pb.variables) + len(pb.constraints) + 2 * len(pb.variables) + 1
 
         # create zeros matrix
         A = np.zeros((nrows, ncols))
@@ -90,7 +89,7 @@ class pysimplex(solver):
         row = 1
         nse = len(pb.variables) + 1
         for cn in pb.constraints:
-            A[row, 1:(len(pb.variables) + 1)] = cn.lhs._u[1:]
+            A[row, 1 : (len(pb.variables) + 1)] = cn.lhs._u[1:]
             if cn.oper == minilp.expr.comparison_operator.le:
                 A[row, nse] = 1
             A[row, -1] = cn.rhs
@@ -107,12 +106,12 @@ class pysimplex(solver):
             nse += 2
 
         # convert max -> min
-        if pb.sense == 'max':
+        if pb.sense == "max":
             mul = -1
         else:
             mul = 1
 
-        A[0, 1:len(pb.variables) + 1] = mul * pb.objective._u[1:]
+        A[0, 1 : len(pb.variables) + 1] = mul * pb.objective._u[1:]
 
         # drop all zeros rows
         A = A[~np.all(A == 0, axis=1), :]
@@ -125,14 +124,13 @@ class pysimplex(solver):
         for row in range(nrows):
             if A[row, -1] < 0:
                 A[row, :] *= -1
-            if np.sign(A[row, -1]) != np.sign(
-                    A[row, len(pb.variables) + 1:-1].sum()):
+            if np.sign(A[row, -1]) != np.sign(A[row, len(pb.variables) + 1 : -1].sum()):
                 vrows.append(row)
 
         # phase 1
         S = np.zeros((nrows, ncols + len(vrows)))
         S[0, 0] = 1
-        S[1:, :ncols - 1] = A[1:, :-1]
+        S[1:, : ncols - 1] = A[1:, :-1]
         S[1:, -1] = A[1:, -1]
         for i, row in enumerate(vrows):
             S[0, :] -= S[row, :]
@@ -141,14 +139,14 @@ class pysimplex(solver):
         S, z, x = self.simplex(S)
 
         if z > self.eps:
-            return minilp.results.result(False, 'infeasible')
+            return minilp.results.result(False, "infeasible")
 
         # phase 2
         basis = self.get_basis(S)
         A = S[:, :ncols]
         A[:, -1] = S[:, -1]
-        A[0, 1:len(pb.variables) + 1] = mul * pb.objective._u[1:]
-        A[0, len(pb.variables) + 1:] = 0
+        A[0, 1 : len(pb.variables) + 1] = mul * pb.objective._u[1:]
+        A[0, len(pb.variables) + 1 :] = 0
 
         for i in range(ncols - 1):
             if basis[i] != 0:
@@ -157,9 +155,9 @@ class pysimplex(solver):
         A, z, x = self.simplex(A)
 
         if x is None:
-            return minilp.results.result(False, 'unbounded', mul * (-np.inf))
+            return minilp.results.result(False, "unbounded", mul * (-np.inf))
 
-        return minilp.results.result(True, 'optimal', mul * z, x[:len(pb.variables)])
+        return minilp.results.result(True, "optimal", mul * z, x[: len(pb.variables)])
 
 
 class scipy(solver):
@@ -169,13 +167,14 @@ class scipy(solver):
         minilp.results.solve_status.optimal,
         minilp.results.solve_status.unknown,
         minilp.results.solve_status.infeasible,
-        minilp.results.solve_status.unbounded
+        minilp.results.solve_status.unbounded,
     ]
 
     def __init__(self):
         from scipy.optimize import linprog
+
         self.__linprog = linprog
-        self.method = 'simplex'
+        self.method = "simplex"
 
     def solve(self, problem):
 
@@ -183,12 +182,9 @@ class scipy(solver):
         problem._clean()
 
         obj = problem.objective._u[1:].copy()
-        if problem.sense == 'max':
+        if problem.sense == "max":
             obj *= -1
-        kargs = {
-            'c': obj,
-            'bounds': [(v.lb, v.ub) for v in problem.variables]
-        }
+        kargs = {"c": obj, "bounds": [(v.lb, v.ub) for v in problem.variables]}
         A_ub, b_ub, A_eq, b_eq = [], [], [], []
         for c in problem.constraints:
             if c.oper == minilp.expr.comparison_operator.le:
@@ -199,34 +195,32 @@ class scipy(solver):
                 b_eq.append(c._r)
 
         if A_ub:
-            kargs.update({
-                'A_ub': A_ub,
-                'b_ub': b_ub
-            })
+            kargs.update({"A_ub": A_ub, "b_ub": b_ub})
         if A_eq:
-            kargs.update({
-                'A_eq': A_eq,
-                'b_eq': b_eq
-            })
-        kargs['method'] = self.method
+            kargs.update({"A_eq": A_eq, "b_eq": b_eq})
+        kargs["method"] = self.method
         res = self.__linprog(**kargs)
-        if res.success and problem.sense == 'max':
+        if res.success and problem.sense == "max":
             res.fun *= -1
-        return minilp.results.result(res.success, scipy._status[res.status], res.fun, res.x)
+        return minilp.results.result(
+            res.success, scipy._status[res.status], res.fun, res.x
+        )
 
 
 class docplex(solver):
-
     def __init__(self):
         from docplex.util.status import JobSolveStatus
+
         self.status = {
             JobSolveStatus.UNKNOWN: minilp.results.solve_status.unknown,
             JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.solve_status.feasible,
             JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.solve_status.optimal,
+            # fmt: off
             JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION:
                 minilp.results.solve_status.unknown,
+            # fmt: on
             JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.solve_status.infeasible,
-            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.unbounded
+            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.unbounded,
         }
 
     def solve(self, problem):
@@ -241,10 +235,12 @@ class docplex(solver):
             # Create a list of variables:
             v = m.continuous_var_list(
                 len(problem.variables),
-                [v.lb if v.lb > -modeler.inf else -m.infinity
-                 for v in problem.variables],
-                [v.ub if v.ub < modeler.inf else m.infinity
-                 for v in problem.variables])
+                [
+                    v.lb if v.lb > -modeler.inf else -m.infinity
+                    for v in problem.variables
+                ],
+                [v.ub if v.ub < modeler.inf else m.infinity for v in problem.variables],
+            )
 
             # Set the objective:
             obj = problem.objective._u[0]
@@ -264,16 +260,22 @@ class docplex(solver):
             m.solve()
 
             if not m.solution:
-                return minilp.results.result(False, self.status[m.get_solve_status()],
-                                             np.nan, [None] * len(problem.variables))
+                return minilp.results.result(
+                    False,
+                    self.status[m.get_solve_status()],
+                    np.nan,
+                    [None] * len(problem.variables),
+                )
             return minilp.results.result(
-                True, self.status[m.get_solve_status()],
+                True,
+                self.status[m.get_solve_status()],
                 m.solution.objective_value,
-                m.solution.get_values(v))
+                m.solution.get_values(v),
+            )
 
 
 # The default solver to  use:
-default_solver = None
+default_solver: typing.Optional[typing.Type[solver]] = None
 
 
 def set_default_solver(solver_class: type):
