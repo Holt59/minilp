@@ -40,5 +40,5 @@ setup(
     description="Python 3 light Linear Programming module",
     long_description=long_description,
     license="MIT",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
 )

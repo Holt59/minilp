@@ -26,6 +26,11 @@ class result:
 
     """ Class representing the solution of a minilp problem. """
 
+    _success: bool
+    _status: solve_status
+    _objective: float
+    _values: typing.Optional[typing.List[float]]
+
     def __init__(
         self,
         success: bool = False,
@@ -40,13 +45,13 @@ class result:
             objective: Objective value of the solution.
             variables: Values of the variables in this solution.
         """
-        self.__success = success
-        self.__status = status
-        self.__objective = objective
+        self._success = success
+        self._status = status
+        self._objective = objective
         if variables is None:
-            self.__vs = None
+            self._values = None
         else:
-            self.__vs = list(variables)
+            self._values = list(variables)
 
     def get_value(self, variable: "minilp.expr.var") -> float:
         """ Retrieve the value associated to the given variable.
@@ -57,11 +62,11 @@ class result:
         Returns:
             The value associated with the given variable in this solution.
         """
-        if self.__vs is None:
+        if self._values is None:
             raise ValueError(
                 "No value associated to variable {} in  this solution".format(variable)
             )
-        value = self.__vs[variable._idx - 1]
+        value = self._values[variable._idx - 1]
         return value
 
     def get_values(
@@ -81,20 +86,21 @@ class result:
     @property
     def success(self) -> bool:
         """ True if this result contains a solution, false otherwize. """
-        return self.__success
+        return self._success
 
     @property
     def status(self) -> solve_status:
         """ Status of this result. """
-        return self.__status
+        return self._status
 
     @property
     def objective(self) -> float:
         """ Objective value of this result or nan. """
-        return self.__objective
+        return self._objective
 
     def __repr__(self):
         return "status = {}, obj. = {}".format(self.status, self.objective)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
+        """ True if this result contains a solution, false otherwize. """
         return self.success

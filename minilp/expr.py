@@ -182,23 +182,26 @@ class expr:
         """
         return cons(self, comparison_operator.le, expr(other, self._pb))
 
+    def __bool__(self) -> bool:
+        """ An expression cannot be converted to bool. Always raise
+        NotImplementedError. """
+        raise NotImplementedError("Cannot convert expression to bool.")
+
     def __repr__(self):
         s = ""
         for c, v in zip(self._u[1:], self._pb.variables):
-            fmt = None
             if c == 1:
-                fmt = " + {}{}"
-                c = ""
+                fmt = " + {name}"
             elif c == -1:
-                fmt = " - {}{}"
-                c = ""
+                fmt = " - {name}"
             elif c < 0:
                 c = abs(c)
-                fmt = " - {:g} * {}"
+                fmt = " - {value:g} * {name}"
             elif c > 0:
-                fmt = " + {:g} * {}"
-            if fmt is not None:
-                s += fmt.format(c, v)
+                fmt = " + {value:g} * {name}"
+            else:
+                fmt = ""
+            s += fmt.format(name=v, value=c)
         if self._u[0] != 0:
             if self._u[0] > 0:
                 s += " + "

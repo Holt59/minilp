@@ -278,7 +278,7 @@ class docplex(solver):
 default_solver: typing.Optional[typing.Type[solver]] = None
 
 
-def set_default_solver(solver_class: type):
+def set_default_solver(solver_class: typing.Type[solver]):
     """ Set the type of the default solver to use.
 
     Args:
