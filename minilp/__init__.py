@@ -1,9 +1,10 @@
 # -* - encoding: utf-8 -*-
 
-from minilp.modeler import modeler
-from minilp.expr import cons, expr, var   # noqa
-from minilp.problem import problem        # noqa
+__version__ = "0.0.1"
 
-import minilp.solvers as solvers          # noqa
+import minilp.problems
+import minilp.results
 
-globals().update(modeler.__dict__)
+problem = minilp.problems.problem
+result = minilp.results.result
+status = minilp.results.solve_status

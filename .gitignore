@@ -1,3 +1,13 @@
+# Editor files
 *~
+
+# Documentation build
+.tox
+doc/_build
+
+# Python files
 __pycache__
 .ipynb_checkpoints
+.mypy_cache
+**/*.egg-info
+**/.eggs
