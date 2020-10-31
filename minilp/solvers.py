@@ -5,15 +5,17 @@ import numpy as np
 import typing
 
 from minilp.modeler import modeler
-import minilp.expr
+import minilp.exprs
 import minilp.problems
 import minilp.results
 
 
 class solver(abc.ABC):
 
-    """ Abstract class representing a solver for linear programs (without
-    integer variables). """
+    """
+    Abstract class representing a solver for linear programs (without
+    integer variables).
+    """
 
     def solve(self, problem: "minilp.problems.problem") -> "minilp.results.result":
         """
@@ -90,7 +92,7 @@ class pysimplex(solver):
         nse = len(pb.variables) + 1
         for cn in pb.constraints:
             A[row, 1 : (len(pb.variables) + 1)] = cn.lhs._u[1:]
-            if cn.oper == minilp.expr.comparison_operator.le:
+            if cn.oper == minilp.exprs.comparison_operator.le:
                 A[row, nse] = 1
             A[row, -1] = cn.rhs
             row += 1
@@ -139,7 +141,7 @@ class pysimplex(solver):
         S, z, x = self.simplex(S)
 
         if z > self.eps:
-            return minilp.results.result(False, "infeasible")
+            return minilp.results.result(False, minilp.results.solve_status.INFEASIBLE)
 
         # phase 2
         basis = self.get_basis(S)
@@ -155,19 +157,23 @@ class pysimplex(solver):
         A, z, x = self.simplex(A)
 
         if x is None:
-            return minilp.results.result(False, "unbounded", mul * (-np.inf))
+            return minilp.results.result(
+                False, minilp.results.solve_status.UNBOUNDED, mul * (-np.inf)
+            )
 
-        return minilp.results.result(True, "optimal", mul * z, x[: len(pb.variables)])
+        return minilp.results.result(
+            True, minilp.results.solve_status.OPTIMAL, mul * z, x[: len(pb.variables)]
+        )
 
 
 class scipy(solver):
 
     # Mapping between scipy status and minilp status.
     _status = [
-        minilp.results.solve_status.optimal,
-        minilp.results.solve_status.unknown,
-        minilp.results.solve_status.infeasible,
-        minilp.results.solve_status.unbounded,
+        minilp.results.solve_status.OPTIMAL,
+        minilp.results.solve_status.UNKNOWN,
+        minilp.results.solve_status.INFEASIBLE,
+        minilp.results.solve_status.UNBOUNDED,
     ]
 
     def __init__(self):
@@ -187,7 +193,7 @@ class scipy(solver):
         kargs = {"c": obj, "bounds": [(v.lb, v.ub) for v in problem.variables]}
         A_ub, b_ub, A_eq, b_eq = [], [], [], []
         for c in problem.constraints:
-            if c.oper == minilp.expr.comparison_operator.le:
+            if c.oper == minilp.exprs.comparison_operator.le:
                 A_ub.append(c._e._u[1:])
                 b_ub.append(c._r)
             else:
@@ -212,15 +218,15 @@ class docplex(solver):
         from docplex.util.status import JobSolveStatus
 
         self.status = {
-            JobSolveStatus.UNKNOWN: minilp.results.solve_status.unknown,
-            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.solve_status.feasible,
-            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.solve_status.optimal,
+            JobSolveStatus.UNKNOWN: minilp.results.solve_status.UNKNOWN,
+            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.solve_status.FEASIBLE,
+            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.solve_status.OPTIMAL,
             # fmt: off
             JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION:
-                minilp.results.solve_status.unknown,
+                minilp.results.solve_status.UNKNOWN,
             # fmt: on
-            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.solve_status.infeasible,
-            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.unbounded,
+            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.solve_status.INFEASIBLE,
+            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.UNBOUNDED,
         }
 
     def solve(self, problem):
@@ -251,7 +257,7 @@ class docplex(solver):
             for cn in problem.constraints:
                 lhs = sum(c * v for c, v in zip(cn.lhs._u[1:], v))
                 rhs = cn.rhs
-                if cn.oper == minilp.expr.comparison_operator.eq:
+                if cn.oper == minilp.exprs.comparison_operator.eq:
                     m.add_constraint(lhs == rhs)
                 else:
                     m.add_constraint(lhs <= rhs)
@@ -279,7 +285,7 @@ default_solver: typing.Optional[typing.Type[solver]] = None
 
 
 def set_default_solver(solver_class: typing.Type[solver]):
-    """ Set the type of the default solver to use.
+    """Set the type of the default solver to use.
 
     Args:
         solver_class: Class of the solver to use. Must inherit solver.
@@ -289,7 +295,7 @@ def set_default_solver(solver_class: typing.Type[solver]):
 
 
 def get_default_solver() -> solver:
-    """ Get a new instance of the default solver.
+    """Get a new instance of the default solver.
 
     If a default solver class has been set using set_default_solver,
     and instance of the class is created and returned. Otherwize,

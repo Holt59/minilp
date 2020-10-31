@@ -23,7 +23,7 @@ def test_minilp_lp():
     # Solve the problem:
     res = lp.lp_solve()
 
-    assert res.status == minilp.status.optimal
+    assert res.status == minilp.status.OPTIMAL
     assert res.objective == approx(7.5)
     assert res.get_value(x1) == approx(2.5)
     assert res.get_value(x2) == approx(2.5)
@@ -48,7 +48,7 @@ def test_minilp_kp():
     # We can solve the linear relaxation:
     res = kp.lp_solve()
 
-    assert res.status == minilp.status.optimal
+    assert res.status == minilp.status.OPTIMAL
     assert res.objective == approx(10.8)
 
     expected_x = [0, 1, 1, 0.6, 0]

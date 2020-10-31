@@ -4,19 +4,21 @@ import enum
 import typing
 
 from minilp.modeler import modeler
-import minilp.expr
+import minilp.exprs
 
 
 class solve_status(enum.Enum):
 
-    """ Enumeration class representing the status of a problem
-    solution. """
+    """
+    Enumeration class representing the status of a problem
+    solution.
+    """
 
-    unknown = enum.auto()
-    feasible = enum.auto()
-    optimal = enum.auto()
-    infeasible = enum.auto()
-    unbounded = enum.auto()
+    UNKNOWN = enum.auto()
+    FEASIBLE = enum.auto()
+    OPTIMAL = enum.auto()
+    INFEASIBLE = enum.auto()
+    UNBOUNDED = enum.auto()
 
     def __str__(self):
         return self.name
@@ -34,7 +36,7 @@ class result:
     def __init__(
         self,
         success: bool = False,
-        status: solve_status = solve_status.unknown,
+        status: solve_status = solve_status.UNKNOWN,
         objective: float = modeler.nan,
         variables: typing.Optional[typing.Iterable[float]] = None,
     ):
@@ -53,8 +55,8 @@ class result:
         else:
             self._values = list(variables)
 
-    def get_value(self, variable: "minilp.expr.var") -> float:
-        """ Retrieve the value associated to the given variable.
+    def get_value(self, variable: "minilp.exprs.var") -> float:
+        """Retrieve the value associated to the given variable.
 
         Args:
             variable: The variable to retrieve the value for.
@@ -70,9 +72,9 @@ class result:
         return value
 
     def get_values(
-        self, variables: typing.Iterable["minilp.expr.var"]
+        self, variables: typing.Iterable["minilp.exprs.var"]
     ) -> typing.List[float]:
-        """ Retrieve thes value associated to the given variables.
+        """Retrieve thes value associated to the given variables.
 
         Args:
             variables: The variables to retrieve the value for.

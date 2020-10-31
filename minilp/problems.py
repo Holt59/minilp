@@ -4,7 +4,7 @@ import collections.abc
 import typing
 import numpy as np
 
-import minilp.expr
+import minilp.exprs
 from minilp.modeler import modeler
 import minilp.solvers
 
@@ -13,14 +13,15 @@ class problem(minilp.modeler.modeler):
 
     _idx: int = 1
     _sense: str
-    _vars: typing.List["minilp.expr.var"]
-    _cons: typing.List["minilp.expr.cons"]
-    _obj: "minilp.expr.expr"
+    _vars: typing.List["minilp.exprs.var"]
+    _cons: typing.List["minilp.exprs.cons"]
+    _obj: "minilp.exprs.expr"
 
     name: str
 
     def __init__(self, name: str = ""):
-        """ Create a new problem with the given name and sense for the objective.
+        """
+        Create a new problem with the given name and sense for the objective.
 
         Args:
             name: Name of the problem.
@@ -29,7 +30,7 @@ class problem(minilp.modeler.modeler):
         self._vars = []
         self._cons = []
         self._sense = "min"
-        self._obj = minilp.expr.expr(0, self)
+        self._obj = minilp.exprs.expr(0, self)
         self.name = name
 
     def _var(
@@ -38,8 +39,9 @@ class problem(minilp.modeler.modeler):
         ub: float = modeler.inf,
         cat: type = int,
         name: typing.Optional[str] = None,
-    ) -> "minilp.expr.var":
-        """ Create a variable of the given category.
+    ) -> "minilp.exprs.var":
+        """
+        Create a variable of the given category.
 
         Args:
             lb: Lower bound of the variable (or -inf for unbounded).
@@ -54,7 +56,7 @@ class problem(minilp.modeler.modeler):
         self._idx += 1
         if name is None:
             name = "_x{}".format(idx)
-        self._vars.append(minilp.expr.var(self, idx, lb, ub, cat, name))
+        self._vars.append(minilp.exprs.var(self, idx, lb, ub, cat, name))
         return self._vars[-1]
 
     def _var_dict(
@@ -64,8 +66,9 @@ class problem(minilp.modeler.modeler):
         ub: typing.Union[typing.Iterable[float], float] = modeler.inf,
         cat: type = int,
         prefix: str = "",
-    ) -> typing.Dict[typing.Any, "minilp.expr.var"]:
-        """ Create a dictionary of variables of the given category
+    ) -> typing.Dict[typing.Any, "minilp.exprs.var"]:
+        """
+        Create a dictionary of variables of the given category
         with the given parameters.
 
         The names of the created variables are the concatenation of prefix
@@ -92,7 +95,7 @@ class problem(minilp.modeler.modeler):
             ub = [ub] * len(keys)
         return {
             k: self._var(l, u, cat, "{}{}".format(prefix, k))
-            for l, u, k in zip(lb, ub, keys)
+            for l, u, k in zip(lb, ub, keys)  # noqa: E741
         }
 
     def _var_list(
@@ -102,8 +105,9 @@ class problem(minilp.modeler.modeler):
         ub: typing.Union[float, typing.Iterable[float]] = modeler.inf,
         cat: type = int,
         prefix: typing.Optional[str] = None,
-    ) -> typing.List["minilp.expr.var"]:
-        """ Create a list of variables of the given category
+    ) -> typing.List["minilp.exprs.var"]:
+        """
+        Create a list of variables of the given category
         with the given parameters.
 
         The names of the created variables are the concatenation of prefix
@@ -137,10 +141,11 @@ class problem(minilp.modeler.modeler):
             lb = [lb] * len(names)
         if not isinstance(ub, collections.abc.Iterable):
             ub = [ub] * len(names)
-        return [self._var(l, u, cat, n) for l, u, n in zip(lb, ub, names)]
+        return [self._var(l, u, cat, n) for l, u, n in zip(lb, ub, names)]  # noqa: E741
 
-    def binary_var(self, name: typing.Optional[str] = None) -> "minilp.expr.var":
-        """ Create a new binary variable with the given name.
+    def binary_var(self, name: typing.Optional[str] = None) -> "minilp.exprs.var":
+        """
+        Create a new binary variable with the given name.
 
         Args:
             name: Name of the variable. If None, a name will be
@@ -153,8 +158,9 @@ class problem(minilp.modeler.modeler):
 
     def integer_var(
         self, lb: float = 0, ub: float = modeler.inf, name: typing.Optional[str] = None
-    ) -> "minilp.expr.var":
-        """ Create a new integer variable with the given bounds and name.
+    ) -> "minilp.exprs.var":
+        """
+        Create a new integer variable with the given bounds and name.
 
         Args:
             lb: Lower bound of the variable (or -inf for unbounded).
@@ -169,8 +175,9 @@ class problem(minilp.modeler.modeler):
 
     def continuous_var(
         self, lb: float = 0, ub: float = modeler.inf, name: typing.Optional[str] = None
-    ) -> "minilp.expr.var":
-        """ Create a new continuous variable with the given bounds and name.
+    ) -> "minilp.exprs.var":
+        """
+        Create a new continuous variable with the given bounds and name.
 
         Args:
             lb: Lower bound of the variable (or -inf for unbounded).
@@ -187,8 +194,9 @@ class problem(minilp.modeler.modeler):
         self,
         n_or_names: typing.Union[int, typing.Iterable],
         prefix: typing.Optional[str] = None,
-    ) -> typing.List["minilp.expr.var"]:
-        """ Create a list of binary variables.
+    ) -> typing.List["minilp.exprs.var"]:
+        """
+        Create a list of binary variables.
 
         The name of the variable is created by concatenating the prefix with
         either the index of the variable (if n_or_names is an int) or the
@@ -210,8 +218,9 @@ class problem(minilp.modeler.modeler):
         lb: float = 0,
         ub: float = modeler.inf,
         prefix: typing.Optional[str] = None,
-    ) -> typing.List["minilp.expr.var"]:
-        """ Create a list of integer variables.
+    ) -> typing.List["minilp.exprs.var"]:
+        """
+        Create a list of integer variables.
 
         The name of the variable is created by concatenating the prefix with
         either the index of the variable (if n_or_names is an int) or the
@@ -239,8 +248,9 @@ class problem(minilp.modeler.modeler):
         lb: float = 0,
         ub: float = modeler.inf,
         prefix: typing.Optional[str] = None,
-    ) -> typing.List["minilp.expr.var"]:
-        """ Create a list of continuous variables.
+    ) -> typing.List["minilp.exprs.var"]:
+        """
+        Create a list of continuous variables.
 
         The name of the variable is created by concatenating the prefix with
         either the index of the variable (if n_or_names is an int) or the
@@ -264,8 +274,9 @@ class problem(minilp.modeler.modeler):
 
     def binary_var_dict(
         self, keys: typing.Dict
-    ) -> typing.Dict[typing.Any, "minilp.expr.var"]:
-        """ Create a dictionary of binary variables.
+    ) -> typing.Dict[typing.Any, "minilp.exprs.var"]:
+        """
+        Create a dictionary of binary variables.
 
         Args:
             keys: Keys of the dictionary (used for variable names).
@@ -277,8 +288,9 @@ class problem(minilp.modeler.modeler):
 
     def integer_var_dict(
         self, keys: typing.Dict, lb: float = 0, ub: float = modeler.inf
-    ) -> typing.Dict[typing.Any, "minilp.expr.var"]:
-        """ Create a dictionary of integer variables.
+    ) -> typing.Dict[typing.Any, "minilp.exprs.var"]:
+        """
+        Create a dictionary of integer variables.
 
         Args:
             keys: Keys for the dictionary (used for variable names).
@@ -296,8 +308,9 @@ class problem(minilp.modeler.modeler):
 
     def continuous_var_dict(
         self, keys: typing.Dict, lb: float = 0, ub: float = modeler.inf
-    ) -> typing.Dict[typing.Any, "minilp.expr.var"]:
-        """ Create a dictionary of continuous variables.
+    ) -> typing.Dict[typing.Any, "minilp.exprs.var"]:
+        """
+        Create a dictionary of continuous variables.
 
         Args:
             keys: Keys for the dictionary (used for variable names).
@@ -313,8 +326,9 @@ class problem(minilp.modeler.modeler):
         """
         return self._var_dict(keys, lb, ub, float)
 
-    def add_constraint(self, constraint: "minilp.expr.cons") -> "minilp.expr.cons":
-        """ Add the given constraint to the problem.
+    def add_constraint(self, constraint: "minilp.exprs.cons") -> "minilp.exprs.cons":
+        """
+        Add the given constraint to the problem.
 
         Args:
             constraint: Constraint to add to the problem.
@@ -323,10 +337,10 @@ class problem(minilp.modeler.modeler):
             The added constraint.
         """
 
-        if not isinstance(constraint, minilp.expr.cons):
+        if not isinstance(constraint, minilp.exprs.cons):
             raise ValueError(
                 "Constraint must be a valid {} instance.".format(
-                    ".".join([minilp.expr.cons.__module__, minilp.expr.cons.__name__])
+                    ".".join([minilp.exprs.cons.__module__, minilp.exprs.cons.__name__])
                 )
             )
 
@@ -341,9 +355,10 @@ class problem(minilp.modeler.modeler):
         return self._cons[-1]
 
     def add_constraints(
-        self, constraints: typing.Iterable["minilp.expr.cons"]
-    ) -> typing.List["minilp.expr.cons"]:
-        """ Add the given constraints to the problem.
+        self, constraints: typing.Iterable["minilp.exprs.cons"]
+    ) -> typing.List["minilp.exprs.cons"]:
+        """
+        Add the given constraints to the problem.
 
         Args:
             constraints: List of constraints to add to the problem.
@@ -353,23 +368,25 @@ class problem(minilp.modeler.modeler):
         """
         return [self.add_constraint(c) for c in constraints]
 
-    def del_constraint(self, constraint_or_idx: typing.Union[int, "minilp.expr.cons"]):
-        """ Delete the specified constraint from the problem.
+    def del_constraint(self, constraint_or_idx: typing.Union[int, "minilp.exprs.cons"]):
+        """
+        Delete the specified constraint from the problem.
 
         Args:
             constraint_or_idx: Constraint or index of the constraint
                                to remove.
         """
         idx = constraint_or_idx
-        if isinstance(idx, minilp.expr.cons):
+        if isinstance(idx, minilp.exprs.cons):
             idx = self._cons.index(idx)
         del self._cons[idx]
 
     def del_constraints(
         self,
-        constraints_or_idxs: typing.Iterable[typing.Union[int, "minilp.expr.cons"]],
+        constraints_or_idxs: typing.Iterable[typing.Union[int, "minilp.exprs.cons"]],
     ):
-        """ Delete the specified constraints from the problem.
+        """
+        Delete the specified constraints from the problem.
 
         Args:
             constraints_or_idxs: Constraints or indexes of the constraints
@@ -381,8 +398,9 @@ class problem(minilp.modeler.modeler):
         for c in constraints_or_idxs:
             self.del_constraint(c)
 
-    def set_objective(self, sense: str, objective: "minilp.expr.expr"):
-        """ Set the objective of the problem.
+    def set_objective(self, sense: str, objective: "minilp.exprs.expr"):
+        """
+        Set the objective of the problem.
 
         Args:
             sense: Sense of the objective ('min' or 'max').
@@ -391,10 +409,10 @@ class problem(minilp.modeler.modeler):
         if sense not in ["min", "max"]:
             raise ValueError("Unrecognized sense for optimization: {}.".format(sense))
 
-        if not isinstance(objective, minilp.expr.expr):
+        if not isinstance(objective, minilp.exprs.expr):
             raise ValueError(
                 "Objective must be a valid {} instance.".format(
-                    ".".join([minilp.expr.expr.__module__, minilp.expr.expr.__name__])
+                    ".".join([minilp.exprs.expr.__module__, minilp.exprs.expr.__name__])
                 )
             )
 
@@ -408,16 +426,18 @@ class problem(minilp.modeler.modeler):
         self._sense = sense
         self._obj = objective
 
-    def maximize(self, objective: "minilp.expr.expr"):
-        """ Set the objective value as a maximixation.
+    def maximize(self, objective: "minilp.exprs.expr"):
+        """
+        Set the objective value as a maximixation.
 
         Args:
             objective: Expression of the objective of the problem.
         """
         self.set_objective("max", objective)
 
-    def minimize(self, objective: "minilp.expr.expr"):
-        """ Set the objective value as a minimization.
+    def minimize(self, objective: "minilp.exprs.expr"):
+        """
+        Set the objective value as a minimization.
 
         Args:
             objective: Expression of the objective value of the problem.
@@ -425,28 +445,42 @@ class problem(minilp.modeler.modeler):
         self.set_objective("min", objective)
 
     @property
-    def variables(self) -> typing.List["minilp.expr.var"]:
-        """ List of variables of the problem. """
+    def variables(self) -> typing.List["minilp.exprs.var"]:
+        """
+        Returns:
+            The list of variables of the problem.
+        """
         return self._vars
 
     @property
-    def constraints(self) -> typing.List["minilp.expr.cons"]:
-        """ List of constraints of the problem. """
+    def constraints(self) -> typing.List["minilp.exprs.cons"]:
+        """
+        Returns:
+            The list of constraints of the problem.
+        """
         return self._cons
 
     @property
-    def objective(self) -> "minilp.expr.expr":
-        """ Objective expression of the problem. """
+    def objective(self) -> "minilp.exprs.expr":
+        """
+        Returns:
+            The objective expression of the problem.
+        """
         return self._obj
 
     @property
     def sense(self) -> str:
-        """ Sense of the problem objective ('min' or 'max'). """
+        """
+        Returns:
+            The optimization sense of the problem objective ('min' or 'max').
+        """
         return self._sense
 
     def _clean(self):
-        """ Clean this problem by extending, if necessary, the expression
-        with new variables. """
+        """
+        Clean this problem by extending, if necessary, the expression
+        with new variables.
+        """
         ncols = len(self.variables) + 1
         self._obj._u = np.concatenate(
             (self._obj._u, np.zeros(max(0, ncols - len(self._obj._u))))
@@ -459,7 +493,8 @@ class problem(minilp.modeler.modeler):
             vs._u = np.concatenate((vs._u, np.zeros(max(0, ncols - len(vs._u)))))
 
     def lp_solve(self, solver: typing.Optional["minilp.solvers.solver"] = None):
-        """ Solve a relaxation of the problem using the specific solver.
+        """
+        Solve a relaxation of the problem using the specific solver.
 
         Args:
             solver: Solver to use to solve the linear relaxation of this problem.
