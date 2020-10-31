@@ -262,6 +262,9 @@ class docplex(solver):
                 else:
                     m.add_constraint(lhs <= rhs)
 
+            # Disable presolve:
+            m.parameters.preprocessing.presolve.set(0)
+
             # Solve the problem:
             m.solve()
 

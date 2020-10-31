@@ -11,7 +11,8 @@ class modeler:
 
     @staticmethod
     def isnan(value: float) -> bool:
-        """ Check if the given value is a NaN (Not a Number).
+        """
+        Check if the given value is a NaN (Not a Number).
 
         Args:
             value: The value to check.
@@ -23,7 +24,8 @@ class modeler:
 
     @staticmethod
     def sum(iterable: typing.Iterable, start: float = 0) -> float:
-        """ Sum the values in the given iterable.
+        """
+        Sum the values in the given iterable.
 
         Args:
             iterable: Iterable of values to sum.
@@ -36,7 +38,8 @@ class modeler:
 
     @staticmethod
     def dot(lhs: typing.Iterable, rhs: typing.Iterable) -> float:
-        """ Compute the dot product of two iterables.
+        """
+        Compute the dot product of two iterables.
 
         Args:
             lhs: The left iterable for the dot product.
@@ -45,4 +48,4 @@ class modeler:
         Returns:
             The dot product of the two given iterables.
         """
-        return sum(l * r for l, r in zip(lhs, rhs))
+        return sum(ls * rs for ls, rs in zip(lhs, rhs))

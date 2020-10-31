@@ -11,8 +11,10 @@ import minilp.problems
 
 class comparison_operator(enum.Enum):
 
-    """ Enumeration class containing the valid comparison operators for
-    linear expression (<=, ==, >=). """
+    """
+    Enumeration class containing the valid comparison operators for
+    linear expression (<=, ==, >=).
+    """
 
     le = "<="
     eq = "=="
@@ -24,11 +26,13 @@ class expr:
     _u: np.ndarray
     _pb: "minilp.problems.problem"
 
-    """ Class representing a linear expression, i.e., a weighted
+    """
+    Class representing a linear expression, i.e., a weighted
     sum of variables.
 
     An expression is associated with a minilp problem and contains
-    an array of coefficients for the variable in the problem. """
+    an array of coefficients for the variable in the problem.
+    """
 
     def __init__(
         self,
@@ -53,15 +57,22 @@ class expr:
             self._pb = pb
 
     def __pos__(self) -> "expr":
-        """ Returns: This expression. """
+        """
+        Returns:
+           This expression.
+        """
         return expr(self._u, self._pb)
 
     def __neg__(self) -> "expr":
-        """ Returns: The negation of this expression. """
+        """
+        Returns:
+            The negation of this expression.
+        """
         return expr(-self._u, self._pb)
 
     def __add__(self, other: typing.Union["expr", float]) -> "expr":
-        """ Create a new expression by adding the given value or expression to
+        """
+        Create a new expression by adding the given value or expression to
         this expression.
 
         Args:
@@ -82,7 +93,8 @@ class expr:
         return expr(lhs + rhs, self._pb)
 
     def __sub__(self, other: typing.Union["expr", float]) -> "expr":
-        """ Create a new expression by substracting the given value or expression
+        """
+        Create a new expression by substracting the given value or expression
         from this expression.
 
         Args:
@@ -95,7 +107,8 @@ class expr:
         return self + (-other)
 
     def __mul__(self, other: float) -> "expr":
-        """ Multiply this expression by the given value.
+        """
+        Multiply this expression by the given value.
 
         Args:
             other: Value to multiply this expression.
@@ -109,7 +122,8 @@ class expr:
         return expr(self._u * other, self._pb)
 
     def __radd__(self, other: typing.Union["expr", float]) -> "expr":
-        """ Create a new expression by adding the given value or expression to
+        """
+        Create a new expression by adding the given value or expression to
         this expression.
 
         Args:
@@ -122,7 +136,8 @@ class expr:
         return self + other
 
     def __rsub__(self, other: typing.Union["expr", float]) -> "expr":
-        """ Create a new expression by substracting this expression to the given value or
+        """
+        Create a new expression by substracting this expression to the given value or
         expression.
 
         Args:
@@ -135,7 +150,8 @@ class expr:
         return -self + other
 
     def __rmul__(self, other: float) -> "expr":
-        """ Multiply this expression by the given value.
+        """
+        Multiply this expression by the given value.
 
         Args:
             other: Value to multiply this expression.
@@ -147,7 +163,8 @@ class expr:
         return self * other
 
     def __eq__(self, other: typing.Union["expr", float]) -> "cons":  # type: ignore
-        """ Create a new equality constraint between this expression and
+        """
+        Create a new equality constraint between this expression and
         the given value or expression.
 
         Args:
@@ -159,7 +176,8 @@ class expr:
         return cons(self, comparison_operator.eq, expr(other, self._pb))
 
     def __ge__(self, other: typing.Union["expr", float]) -> "cons":
-        """ Create a new greater-or-equal constraint between this expression and
+        """
+        Create a new greater-or-equal constraint between this expression and
         the given value or expression.
 
         Args:
@@ -171,7 +189,8 @@ class expr:
         return cons(self, comparison_operator.ge, expr(other, self._pb))
 
     def __le__(self, other: typing.Union["expr", float]) -> "cons":
-        """ Create a new lower-or-equal constraint between this expression and
+        """
+        Create a new lower-or-equal constraint between this expression and
         the given value or expression.
 
         Args:
@@ -183,8 +202,10 @@ class expr:
         return cons(self, comparison_operator.le, expr(other, self._pb))
 
     def __bool__(self) -> bool:
-        """ An expression cannot be converted to bool. Always raise
-        NotImplementedError. """
+        """
+        An expression cannot be converted to bool. Always raise
+        NotImplementedError.
+        """
         raise NotImplementedError("Cannot convert expression to bool.")
 
     def __repr__(self):
@@ -224,7 +245,9 @@ class var(expr):
 
     _idx: int
 
-    """ A variable is a simple linear expression with a coefficient of 1. """
+    """
+    A variable is a simple linear expression with a coefficient of 1.
+    """
 
     def __init__(
         self,
@@ -255,7 +278,10 @@ class var(expr):
 
     @property
     def category(self):
-        """ Category of the variable (int or float). """
+        """
+        Returns:
+            The category of the variable (int or float).
+        """
         return self.__cat
 
     def __repr__(self):
@@ -267,7 +293,9 @@ class var(expr):
 
 class cons:
 
-    """ Class representing a linear constraint. """
+    """
+    Class representing a linear constraint.
+    """
 
     # Representation of the operator:
     _op_repr = {comparison_operator.le: "<=", comparison_operator.eq: "=="}
@@ -316,17 +344,26 @@ class cons:
 
     @property
     def lhs(self) -> expr:
-        """ Left hand side of the constraint. """
+        """
+        Returns:
+            The left hand side of the constraint.
+        """
         return self._e
 
     @property
     def rhs(self) -> float:
-        """ Right hand side of the constraint. """
+        """
+        Returns:
+            The right hand side of the constraint.
+        """
         return self._r
 
     @property
     def oper(self) -> comparison_operator:
-        """ Comparison operator of the constraint (either oper.ge or oper.eq). """
+        """
+        Returns:
+            The comparison operator of the constraint (either oper.ge or oper.eq).
+        """
         return self._c
 
     def __repr__(self):

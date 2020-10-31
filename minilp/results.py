@@ -26,7 +26,9 @@ class solve_status(enum.Enum):
 
 class result:
 
-    """ Class representing the solution of a minilp problem. """
+    """
+    Class representing the solution of a minilp problem.
+    """
 
     _success: bool
     _status: solve_status
