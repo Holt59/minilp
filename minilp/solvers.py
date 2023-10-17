@@ -1,13 +1,14 @@
-# -*- encoding: utf-8 -*-
+from __future__ import annotations
 
 import abc
-import numpy as np
 import typing
 
-from minilp.modeler import modeler
+import numpy as np
+
 import minilp.exprs
 import minilp.problems
 import minilp.results
+from minilp.modeler import modeler
 
 
 class solver(abc.ABC):
@@ -17,7 +18,8 @@ class solver(abc.ABC):
     integer variables).
     """
 
-    def solve(self, problem: "minilp.problems.problem") -> "minilp.results.result":
+    @abc.abstractmethod
+    def solve(self, problem: minilp.problems.problem) -> minilp.results.result:
         """
         Solve the linear relaxation of the given problem.
 
@@ -31,7 +33,6 @@ class solver(abc.ABC):
 
 
 class pysimplex(solver):
-
     eps = 1e-8
 
     def get_basis(self, A):
@@ -72,7 +73,6 @@ class pysimplex(solver):
         return A, -A[0, -1], np.array(x[1:-1])
 
     def solve(self, problem):
-
         # Clean the problem:
         problem._clean()
 
@@ -167,7 +167,6 @@ class pysimplex(solver):
 
 
 class scipy(solver):
-
     # Mapping between scipy status and minilp status.
     _status = [
         minilp.results.solve_status.OPTIMAL,
@@ -183,7 +182,6 @@ class scipy(solver):
         self.method = "simplex"
 
     def solve(self, problem):
-
         # Clean the problem:
         problem._clean()
 
@@ -230,14 +228,12 @@ class docplex(solver):
         }
 
     def solve(self, problem):
-
         from docplex.mp.model import Model
 
         # Clean the problem:
         problem._clean()
 
         with Model() as m:
-
             # Create a list of variables:
             v = m.continuous_var_list(
                 len(problem.variables),

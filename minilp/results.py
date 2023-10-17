@@ -1,10 +1,12 @@
-# -*- encoding: utf-8 -*-
+# pyright: reportPrivateUsage=false
+
+from __future__ import annotations
 
 import enum
-import typing
+from typing import Iterable
 
-from minilp.modeler import modeler
-import minilp.exprs
+from . import exprs
+from .modeler import modeler
 
 
 class solve_status(enum.Enum):
@@ -33,14 +35,14 @@ class result:
     _success: bool
     _status: solve_status
     _objective: float
-    _values: typing.Optional[typing.List[float]]
+    _values: list[float] | None
 
     def __init__(
         self,
         success: bool = False,
         status: solve_status = solve_status.UNKNOWN,
         objective: float = modeler.nan,
-        variables: typing.Optional[typing.Iterable[float]] = None,
+        variables: Iterable[float] | None = None,
     ):
         """
         Args:
@@ -57,7 +59,7 @@ class result:
         else:
             self._values = list(variables)
 
-    def get_value(self, variable: "minilp.exprs.var") -> float:
+    def get_value(self, variable: exprs.var) -> float:
         """Retrieve the value associated to the given variable.
 
         Args:
@@ -73,9 +75,7 @@ class result:
         value = self._values[variable._idx - 1]
         return value
 
-    def get_values(
-        self, variables: typing.Iterable["minilp.exprs.var"]
-    ) -> typing.List[float]:
+    def get_values(self, variables: Iterable[exprs.var]) -> list[float]:
         """Retrieve thes value associated to the given variables.
 
         Args:
@@ -89,22 +89,22 @@ class result:
 
     @property
     def success(self) -> bool:
-        """ True if this result contains a solution, false otherwize. """
+        """True if this result contains a solution, false otherwize."""
         return self._success
 
     @property
     def status(self) -> solve_status:
-        """ Status of this result. """
+        """Status of this result."""
         return self._status
 
     @property
     def objective(self) -> float:
-        """ Objective value of this result or nan. """
+        """Objective value of this result or nan."""
         return self._objective
 
     def __repr__(self):
         return "status = {}, obj. = {}".format(self.status, self.objective)
 
     def __bool__(self) -> bool:
-        """ True if this result contains a solution, false otherwize. """
+        """True if this result contains a solution, false otherwize."""
         return self.success

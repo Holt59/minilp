@@ -1,12 +1,15 @@
-# -*- encoding: utf-8 -*-
+# pyright: reportPrivateUsage=false
+
+from __future__ import annotations
 
 import enum
-import numpy as np
 import typing
 
-from .modeler import modeler
+import numpy as np
+import numpy.typing as npt
 
-import minilp.problems
+if typing.TYPE_CHECKING:
+    from minilp.problems import problem
 
 
 class comparison_operator(enum.Enum):
@@ -22,9 +25,8 @@ class comparison_operator(enum.Enum):
 
 
 class expr:
-
-    _u: np.ndarray
-    _pb: "minilp.problems.problem"
+    _u: npt.NDArray[np.float_]
+    _pb: problem
 
     """
     Class representing a linear expression, i.e., a weighted
@@ -36,8 +38,8 @@ class expr:
 
     def __init__(
         self,
-        arr: typing.Union["expr", np.ndarray, float],
-        pb: "minilp.problems.problem",
+        arr: expr | npt.NDArray[np.float_] | float,
+        pb: problem,
     ):
         """
         Args:
@@ -56,21 +58,21 @@ class expr:
             self._u = np.array([arr])
             self._pb = pb
 
-    def __pos__(self) -> "expr":
+    def __pos__(self) -> expr:
         """
         Returns:
            This expression.
         """
         return expr(self._u, self._pb)
 
-    def __neg__(self) -> "expr":
+    def __neg__(self) -> expr:
         """
         Returns:
             The negation of this expression.
         """
         return expr(-self._u, self._pb)
 
-    def __add__(self, other: typing.Union["expr", float]) -> "expr":
+    def __add__(self, other: expr | float) -> expr:
         """
         Create a new expression by adding the given value or expression to
         this expression.
@@ -92,7 +94,7 @@ class expr:
         rhs = np.concatenate((other._u, np.zeros(max(0, ms - len(other._u)))))
         return expr(lhs + rhs, self._pb)
 
-    def __sub__(self, other: typing.Union["expr", float]) -> "expr":
+    def __sub__(self, other: expr | float) -> expr:
         """
         Create a new expression by substracting the given value or expression
         from this expression.
@@ -106,7 +108,7 @@ class expr:
         """
         return self + (-other)
 
-    def __mul__(self, other: float) -> "expr":
+    def __mul__(self, other: float) -> expr:
         """
         Multiply this expression by the given value.
 
@@ -121,7 +123,7 @@ class expr:
             raise ValueError("Cannot multiply expression.")
         return expr(self._u * other, self._pb)
 
-    def __radd__(self, other: typing.Union["expr", float]) -> "expr":
+    def __radd__(self, other: expr | float) -> expr:
         """
         Create a new expression by adding the given value or expression to
         this expression.
@@ -135,7 +137,7 @@ class expr:
         """
         return self + other
 
-    def __rsub__(self, other: typing.Union["expr", float]) -> "expr":
+    def __rsub__(self, other: expr | float) -> expr:
         """
         Create a new expression by substracting this expression to the given value or
         expression.
@@ -149,7 +151,7 @@ class expr:
         """
         return -self + other
 
-    def __rmul__(self, other: float) -> "expr":
+    def __rmul__(self, other: float) -> expr:
         """
         Multiply this expression by the given value.
 
@@ -162,7 +164,7 @@ class expr:
         """
         return self * other
 
-    def __eq__(self, other: typing.Union["expr", float]) -> "cons":  # type: ignore
+    def __eq__(self, other: expr | float) -> cons:  # type: ignore
         """
         Create a new equality constraint between this expression and
         the given value or expression.
@@ -175,7 +177,7 @@ class expr:
         """
         return cons(self, comparison_operator.eq, expr(other, self._pb))
 
-    def __ge__(self, other: typing.Union["expr", float]) -> "cons":
+    def __ge__(self, other: expr | float) -> cons:
         """
         Create a new greater-or-equal constraint between this expression and
         the given value or expression.
@@ -188,7 +190,7 @@ class expr:
         """
         return cons(self, comparison_operator.ge, expr(other, self._pb))
 
-    def __le__(self, other: typing.Union["expr", float]) -> "cons":
+    def __le__(self, other: expr | float) -> cons:
         """
         Create a new lower-or-equal constraint between this expression and
         the given value or expression.
@@ -242,7 +244,6 @@ class expr:
 
 
 class var(expr):
-
     _idx: int
 
     """
@@ -251,10 +252,10 @@ class var(expr):
 
     def __init__(
         self,
-        pb: "minilp.problems.problem",
+        pb: problem,
         idx: int,
         lb: float = 0,
-        ub: float = modeler.inf,
+        ub: float | None = None,
         cat: type = int,
         name: str = "",
     ):
@@ -267,12 +268,18 @@ class var(expr):
             cat: Category of the variable (int or float).
             name: Name of the variable.
         """
+
+        from .modeler import modeler
+
         self._u = np.zeros(idx + 1)
         self._pb = pb
         self._idx = idx
         self._u[idx] = 1
         self.lb = lb
-        self.ub = ub
+        if ub is None:
+            self.ub = modeler.inf
+        else:
+            self.ub = ub
         self.name = name
         self.__cat = cat
 

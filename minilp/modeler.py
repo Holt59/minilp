@@ -1,11 +1,12 @@
-# -*- encoding: utf-8 -*-
+from __future__ import annotations
 
 import math
-import typing
+from typing import Iterable, overload
+
+from minilp.exprs import expr
 
 
 class modeler:
-
     inf = float("inf")
     nan = float("nan")
 
@@ -23,7 +24,7 @@ class modeler:
         return math.isnan(value)
 
     @staticmethod
-    def sum(iterable: typing.Iterable, start: float = 0) -> float:
+    def sum(iterable: Iterable[expr | float], start: float = 0) -> expr:
         """
         Sum the values in the given iterable.
 
@@ -34,10 +35,22 @@ class modeler:
         Returns:
             The sum of start plus all the values in iterable.
         """
-        return sum(iterable, start)
+        return sum(iterable, start)  # type: ignore
+
+    @overload
+    @staticmethod
+    def dot(lhs: Iterable[float], rhs: Iterable[expr]) -> expr:
+        ...
+
+    @overload
+    @staticmethod
+    def dot(lhs: Iterable[expr], rhs: Iterable[float]) -> expr:
+        ...
 
     @staticmethod
-    def dot(lhs: typing.Iterable, rhs: typing.Iterable) -> float:
+    def dot(
+        lhs: Iterable[float] | Iterable[expr], rhs: Iterable[float] | Iterable[expr]
+    ) -> expr:
         """
         Compute the dot product of two iterables.
 
@@ -48,4 +61,4 @@ class modeler:
         Returns:
             The dot product of the two given iterables.
         """
-        return sum(ls * rs for ls, rs in zip(lhs, rhs))
+        return sum(ls * rs for ls, rs in zip(lhs, rhs))  # type: ignore
