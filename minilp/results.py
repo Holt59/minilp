@@ -9,7 +9,7 @@ from . import exprs
 from .modeler import modeler
 
 
-class solve_status(enum.Enum):
+class status(enum.Enum):
 
     """
     Enumeration class representing the status of a problem
@@ -33,14 +33,14 @@ class result:
     """
 
     _success: bool
-    _status: solve_status
+    _status: status
     _objective: float
     _values: list[float] | None
 
     def __init__(
         self,
         success: bool = False,
-        status: solve_status = solve_status.UNKNOWN,
+        status: status = status.UNKNOWN,
         objective: float = modeler.nan,
         variables: Iterable[float] | None = None,
     ):
@@ -93,7 +93,7 @@ class result:
         return self._success
 
     @property
-    def status(self) -> solve_status:
+    def status(self) -> status:
         """Status of this result."""
         return self._status
 

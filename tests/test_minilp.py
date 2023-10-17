@@ -6,7 +6,6 @@ import minilp
 
 
 def test_minilp_lp():
-
     lp = minilp.problem("My first LP problem")
     # Create two continuous variables within [0, 4]:
     x1, x2 = lp.continuous_var_list(2, 0, 4)

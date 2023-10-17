@@ -141,7 +141,7 @@ class pysimplex(solver):
         S, z, x = self.simplex(S)
 
         if z > self.eps:
-            return minilp.results.result(False, minilp.results.solve_status.INFEASIBLE)
+            return minilp.results.result(False, minilp.results.status.INFEASIBLE)
 
         # phase 2
         basis = self.get_basis(S)
@@ -158,21 +158,21 @@ class pysimplex(solver):
 
         if x is None:
             return minilp.results.result(
-                False, minilp.results.solve_status.UNBOUNDED, mul * (-np.inf)
+                False, minilp.results.status.UNBOUNDED, mul * (-np.inf)
             )
 
         return minilp.results.result(
-            True, minilp.results.solve_status.OPTIMAL, mul * z, x[: len(pb.variables)]
+            True, minilp.results.status.OPTIMAL, mul * z, x[: len(pb.variables)]
         )
 
 
 class scipy(solver):
     # Mapping between scipy status and minilp status.
     _status = [
-        minilp.results.solve_status.OPTIMAL,
-        minilp.results.solve_status.UNKNOWN,
-        minilp.results.solve_status.INFEASIBLE,
-        minilp.results.solve_status.UNBOUNDED,
+        minilp.results.status.OPTIMAL,
+        minilp.results.status.UNKNOWN,
+        minilp.results.status.INFEASIBLE,
+        minilp.results.status.UNBOUNDED,
     ]
 
     def __init__(self):
@@ -216,15 +216,15 @@ class docplex(solver):
         from docplex.util.status import JobSolveStatus
 
         self.status = {
-            JobSolveStatus.UNKNOWN: minilp.results.solve_status.UNKNOWN,
-            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.solve_status.FEASIBLE,
-            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.solve_status.OPTIMAL,
+            JobSolveStatus.UNKNOWN: minilp.results.status.UNKNOWN,
+            JobSolveStatus.FEASIBLE_SOLUTION: minilp.results.status.FEASIBLE,
+            JobSolveStatus.OPTIMAL_SOLUTION: minilp.results.status.OPTIMAL,
             # fmt: off
             JobSolveStatus.INFEASIBLE_OR_UNBOUNDED_SOLUTION:
-                minilp.results.solve_status.UNKNOWN,
+                minilp.results.status.UNKNOWN,
             # fmt: on
-            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.solve_status.INFEASIBLE,
-            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.solve_status.UNBOUNDED,
+            JobSolveStatus.INFEASIBLE_SOLUTION: minilp.results.status.INFEASIBLE,
+            JobSolveStatus.UNBOUNDED_SOLUTION: minilp.results.status.UNBOUNDED,
         }
 
     def solve(self, problem):
